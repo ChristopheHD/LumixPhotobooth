@@ -25,7 +25,7 @@
     "electron-prebuilt": "^0.36.0",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^2.3.1",
-    "gulp-changed": "^1.2.1",
+    "gulp-changed": "^5.0.4",
     "gulp-combine-mq": "^0.4.0",
     "gulp-css-globbing": "^0.1.8",
     "gulp-if": "^2.0.0",

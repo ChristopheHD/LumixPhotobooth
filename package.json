@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/atom/electron-quick-start#readme",
   "devDependencies": {
-    "electron-prebuilt": "^0.36.0",
+    "electron-prebuilt": "^1.4.13",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^2.3.1",
     "gulp-changed": "^5.0.4",

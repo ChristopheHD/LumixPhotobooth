@@ -1,14 +1,12 @@
 var gulp = require('gulp'),
   autoprefixer = require('gulp-autoprefixer'),
-  minify = require('gulp-minify-css'),
   plumber = require('gulp-plumber'),
   sourcemaps = require('gulp-sourcemaps'),
-  sass = require('gulp-sass'),
+  sass = require('gulp-sass')(require('sass')),
   globCss = require('gulp-css-globbing'),
-  combineMq = require('gulp-combine-mq'),
-  gulpif  = require('gulp-if'),
-  watch = require('gulp-watch'),
-  gutil = require('gulp-util');
+  gcmq = require('gulp-group-css-media-queries'),
+  log = require('fancy-log'),
+  colors = require('ansi-colors');
 
 
 /* ***** Gulp Tasks ***** */
@@ -17,8 +15,8 @@ var gulp = require('gulp'),
 ---------------------------------------------------------
 // Compile CSS, apply prefixer and sourcemaps if set to dev
 ---------------------------------------------------------  */
-gulp.task('scss', function() {
-  gutil.log(gutil.colors.bgGreen('   ..::: SCSS TASKS :::...   '));
+function scss() {
+  log(colors.bgGreen('   ..::: SCSS TASKS :::...   '));
 
   return gulp.src('./app/sass/*.scss')
   .pipe(globCss({
@@ -35,17 +33,17 @@ gulp.task('scss', function() {
   .pipe(sourcemaps.init())
 
   .pipe(sass().on('error', sass.logError))
-  .pipe(autoprefixer({
-    browsers: ['last 2 versions'],
-    cascade: true
-  }))
-  .pipe(combineMq({ beautify: false }))
+  .pipe(autoprefixer())
+  .pipe(gcmq())
   .pipe(sourcemaps.write())
-  // .pipe(minify())
   .pipe(gulp.dest('./app/css'));
-});
+}
 
-gulp.task('watch', ['scss'], function() {
-  // gulp.watch('gulpfile.js');
-  gulp.watch('./app/sass/**', ['scss']);
-});
+exports.scss = scss;
+
+function watchTask() {
+  gulp.watch('./app/sass/**', scss);
+}
+
+exports.watch = gulp.series(scss, watchTask);
+exports.default = scss;

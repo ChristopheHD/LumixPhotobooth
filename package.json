@@ -39,6 +39,6 @@
   "dependencies": {
     "aws-sdk": "^2.2.48",
     "jquery": "^2.2.2",
-    "xml2js": "^0.4.16"
+    "xml2js": "^0.6.2"
   }
 }

@@ -1,7 +1,7 @@
 'use strict';
-require("./config");
-var $ = require("jquery");
-var Lumix = require("./Lumix");
+require('./config');
+var $ = require('jquery');
+var Lumix = require('./Lumix');
 
 var canvas = document.querySelector('#canvas');
 var context = canvas.getContext('2d');
@@ -18,7 +18,14 @@ class Controller {
 
     this.camera = camera;
 
-    this.imageObj = new Image();
+    // Bolt optimization: Use createImageBitmap for high-performance decoding
+    this.currentBitmap = null;
+    this.isDecoding = false;
+    this.lastProcessedCount = -1;
+
+    // Performance metrics
+    this.frameTimeSum = 0;
+    this.frameCount = 0;
 
     // Elements
     this.captureButton = document.getElementById('captureButton');
@@ -39,7 +46,6 @@ class Controller {
     });
 
     this.render();
-
   }
 
   startCountdown() {
@@ -91,18 +97,47 @@ class Controller {
   }
 
   render() {
+    const startTime = performance.now();
+
     this.displayImage(this.camera.getPreviewImage());
 
     requestAnimationFrame(this.render.bind(this));
+
+    // Optional: Log performance periodically
+    if (this.frameCount > 0 && this.frameCount % 300 === 0) {
+      console.log(`Average UI render loop time: ${(this.frameTimeSum / this.frameCount).toFixed(2)}ms`);
+    }
+    this.frameTimeSum += (performance.now() - startTime);
+    this.frameCount++;
   }
 
-  displayImage(imgData) {
-    if(imgData){
-      // console.log('Displaying image data, length:', imgData.length);
-      this.imageObj.onload = function() {
-        context.drawImage(this, 0, 0, this.width, this.height, 0, 0, canvas.width, canvas.height);
-      };
-      this.imageObj.src = "data:image/jpg;base64," + imgData;
+  async displayImage(imgData) {
+    // imgData is now a Buffer/Uint8Array
+    if (imgData && !this.isDecoding && this.camera.server.count !== this.lastProcessedCount) {
+      this.isDecoding = true;
+      this.lastProcessedCount = this.camera.server.count;
+
+      try {
+        // Bolt optimization: createImageBitmap decodes the image off the main thread.
+        // We create a Blob from the binary data.
+        const blob = new Blob([imgData], { type: 'image/jpeg' });
+        const bitmap = await createImageBitmap(blob);
+
+        // Clean up previous bitmap to prevent memory leaks
+        if (this.currentBitmap) {
+          this.currentBitmap.close();
+        }
+
+        this.currentBitmap = bitmap;
+        context.drawImage(this.currentBitmap, 0, 0, this.currentBitmap.width, this.currentBitmap.height, 0, 0, canvas.width, canvas.height);
+      } catch (e) {
+        console.error('Error decoding preview image:', e);
+      } finally {
+        this.isDecoding = false;
+      }
+    } else if (this.currentBitmap) {
+      // If no new data, just redraw the existing bitmap to keep the canvas populated
+      context.drawImage(this.currentBitmap, 0, 0, this.currentBitmap.width, this.currentBitmap.height, 0, 0, canvas.width, canvas.height);
     }
   }
 
@@ -118,7 +153,7 @@ class Controller {
       }
 
       // Attempt to download last photo taken
-      this.attempt((cb)=>{
+      this.attempt((cb) => {
         this.camera.getLastPhoto(cb);
       }, (err, data)=>{
 
@@ -165,12 +200,12 @@ class Controller {
   }
 
   attempt(fn, callback, tries) {
-    fn((err, res)=>{
-      if(err){
+    fn((err, res) => {
+      if (err) {
         //Retry
-        if(tries == 0){
+        if (tries === 0) {
           return callback(err, res);
-        }else{
+        } else {
           return this.attempt(fn, callback, tries - 1);
         }
       }

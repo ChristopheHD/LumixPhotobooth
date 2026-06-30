@@ -314,7 +314,7 @@ class Lumix {
                   url: jpgUrl,
                   contentNumber: contentNumber,
                   err: err
-                }
+                };
                 return callback(e, result);
               }
               return callback(err, result);

@@ -10,7 +10,9 @@
     "start": "npm run build:css && electron main.js --no-sandbox",
     "build:css": "sass app/sass/style.scss app/css/style.css && postcss app/css/style.css -o app/css/style.css",
     "watch:css": "sass --watch app/sass/style.scss app/css/style.css",
-    "dist": "npm run build:css && electron-builder"
+    "dist": "npm run build:css && electron-builder",
+    "lint": "eslint .",
+    "test": "node test/smoke-test.js"
   },
   "keywords": [
     "Electron",
@@ -25,9 +27,12 @@
   },
   "homepage": "https://github.com/atom/electron-quick-start#readme",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "autoprefixer": "^10.5.2",
     "electron": "^42.5.1",
     "electron-builder": "^25.1.8",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0",
     "postcss": "^8.5.16",
     "postcss-cli": "^11.0.1",
     "postcss-sort-media-queries": "^6.6.2",

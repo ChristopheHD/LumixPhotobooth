@@ -20,12 +20,12 @@ server.on('message', function(msg, rinfo) {
     var jpgData = new Buffer(msg.length - offset);
     msg.copy(jpgData, 0, offset);
 
-    fs.writeFile("./video/stream_" + writeCount + ".jpg", 
+    fs.writeFile('./video/stream_' + writeCount + '.jpg',
       jpgData, function(err) {
       if(err) {
         return console.log(err);
       }
-      console.log("The file was saved!");
+      console.log('The file was saved!');
     });
 
   }

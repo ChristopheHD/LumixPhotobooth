@@ -1,3 +1,3 @@
 'use strict';
-var Controller = require("./js/Controller");
+var Controller = require('./js/Controller');
 new Controller();

@@ -15,7 +15,7 @@ let mainWindow;
 
 function createWindow () {
 
-  console.log("Loading Electron window...");
+  console.log('Loading Electron window...');
 
   // Create the browser window.
   mainWindow = new BrowserWindow({

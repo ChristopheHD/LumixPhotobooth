@@ -25,9 +25,6 @@ class LumixServer {
   }
 
   messageHandler(msg, rinfo) {
-    if (this.count % 100 === 0) {
-      console.log('Received UDP packet from:', rinfo.address, 'length:', msg.length, 'total packets:', this.count);
-    }
     //Get offset from header
     var offset = 144;
     for (var i = 0; i < 320; i++) {

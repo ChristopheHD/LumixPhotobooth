@@ -1,2 +1,2 @@
 global.PORT = 49473;
-global.offsetImageID = 0;
+global.preferredImageSize = 'CAM_ORG'; // Options: CAM_ORG (Original), CAM_LRGTN (Large), CAM_TN (Thumbnail)

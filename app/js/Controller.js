@@ -55,7 +55,7 @@ class Controller {
     var count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.captureButton.textContent = "🎂 Preparing...";
+      this.captureButton.textContent = '🎂 Preparing...';
     }
 
     countdownElement.classList.remove('hidden');
@@ -143,12 +143,12 @@ class Controller {
 
   capture() {
     this.captureButton.disabled = true;
-    this.captureButton.textContent = "🎂 Capturing...";
+    this.captureButton.textContent = '🎂 Capturing...';
 
     this.camera.capture((err, ok)=>{
       if(err){
         this.captureButton.disabled = false;
-        this.captureButton.textContent = "Capture";
+        this.captureButton.textContent = 'Capture';
         return;
       }
 
@@ -158,16 +158,16 @@ class Controller {
       }, (err, data)=>{
 
         this.captureButton.disabled = false;
-        this.captureButton.textContent = "Capture";
+        this.captureButton.textContent = 'Capture';
 
         if(err){
-          console.error("Failed to download last photo from camera:", err);
+          console.error('Failed to download last photo from camera:', JSON.stringify(err, null, 2));
           this.camera.startStream();
           return;
         }
 
         // Save photo
-        console.log("Photo downloaded from camera, starting browser download...");
+        console.log('Photo downloaded from camera, starting browser download...');
         this.downloadImage(data);
         
         this.camera.startStream();
@@ -202,11 +202,15 @@ class Controller {
   attempt(fn, callback, tries) {
     fn((err, res) => {
       if (err) {
+        console.warn(`Attempt failed (${tries} tries left):`, JSON.stringify(err));
         //Retry
         if (tries === 0) {
           return callback(err, res);
         } else {
-          return this.attempt(fn, callback, tries - 1);
+          setTimeout(() => {
+            this.attempt(fn, callback, tries - 1);
+          }, 1000);
+          return;
         }
       }
       return callback(err, res);

@@ -267,7 +267,7 @@ class Lumix {
           }
 
           var contentNumber = parseInt(result.camrply.total_content_number[0]);
-          callback(null, contentNumber + global.offsetImageID);
+          callback(null, contentNumber);
           // setTimeout(function () {
           //   //DL DO DT prefixes for files
           //   var jpgUrl = '/DL100' +  + '.jpg';
@@ -283,46 +283,142 @@ class Lumix {
   }
 
   getLastPhoto(callback) {
-    // console.log('Get last photo');q
     let _this = this;
     _this.downloading = true;
     _this.sendLumix(playmode, function (err, result) {
-      // console.log('Play mode result', err, result);
       if (err) {
         _this.downloading = false;
         return callback(err);
       }
 
-      //Wait before getting content
-      setTimeout(()=> {
+      setTimeout(() => {
         _this.sendLumix(get_content_info, function (err, result) {
-          // console.log('get content info result', err, result);
           if (err) {
             _this.downloading = false;
             return callback(err);
           }
 
-          var contentNumber = parseInt(result.camrply.total_content_number[0]);
-          setTimeout(function () {
-            //DL DO DT prefixes for files
-            var paddedNumber = String(contentNumber + global.offsetImageID).padStart(4, '0');
-            var jpgUrl = '/DL100' + paddedNumber + '.jpg';
-            _this.getBinary(jpgUrl, function (err, result) {
+          var totalContentNumber = parseInt(result.camrply.total_content_number[0]);
+          // Browse last content (index is 0-based in some implementations, but lumix.c uses total-1)
+          _this.browseContent(totalContentNumber - 1, 1, (err, didl) => {
+            if (err) {
               _this.downloading = false;
-              if(err || !result || result.length == 0){
-                var e = {
-                  url: jpgUrl,
-                  contentNumber: contentNumber,
-                  err: err
-                };
-                return callback(e, result);
+              return callback(err);
+            }
+
+            try {
+              const item = didl['DIDL-Lite'].item[0];
+              const resources = item.res;
+              let selectedUrl = null;
+
+              // Find resource matching preferred size
+              const preferred = global.preferredImageSize || 'CAM_ORG';
+              for (const res of resources) {
+                const protocolInfo = res.$.protocolInfo;
+                if (protocolInfo.includes('PANASONIC.COM_PN=' + preferred)) {
+                  selectedUrl = res._;
+                  break;
+                }
               }
-              return callback(err, result);
-            });
-          }, 3000);
+
+              // Fallback to first resource if preferred not found
+              if (!selectedUrl && resources.length > 0) {
+                selectedUrl = resources[0]._;
+              }
+
+              if (!selectedUrl) {
+                _this.downloading = false;
+                return callback('No image URL found in SOAP response');
+              }
+
+              // Parse URL to get path and port
+              const urlObj = new URL(selectedUrl);
+              const path = urlObj.pathname;
+              // Port is usually 50001, already handled by getBinary if bin is true
+              // but we should ideally use the port from the URL.
+              // For simplicity, we just use the path as getBinary assumes 50001 for bin=true.
+
+              _this.getBinary(path, function (err, result) {
+                _this.downloading = false;
+                return callback(err, result);
+              });
+
+            } catch (e) {
+              console.error('Failed to parse DIDL-Lite:', e);
+              _this.downloading = false;
+              callback('Failed to parse discovery response');
+            }
+          });
         });
-      }, 500);
+      }, 1000); // 1s wait after playmode
     });
+  }
+
+  browseContent(index, count, callback) {
+    const soapMsg = `<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1" xmlns:pana="urn:schemas-panasonic-com:pana">
+      <ObjectID>0</ObjectID>
+      <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+      <Filter>*</Filter>
+      <StartingIndex>${index}</StartingIndex>
+      <RequestedCount>${count}</RequestedCount>
+      <SortCriteria></SortCriteria>
+      <pana:X_FromCP>LumixLink2.0</pana:X_FromCP>
+    </u:Browse>
+  </s:Body>
+</s:Envelope>`;
+
+    this.soapRequest('/Server0/CDS_control', 'urn:schemas-upnp-org:service:ContentDirectory:1#Browse', soapMsg, (err, result) => {
+      if (err) return callback(err);
+
+      try {
+        // Result is nested XML inside <Result> tag
+        const resultXml = result['s:Envelope']['s:Body'][0]['u:BrowseResponse'][0].Result[0];
+        parseString(resultXml, { explicitArray: true }, callback);
+      } catch (e) {
+        callback('Failed to parse SOAP BrowseResponse');
+      }
+    });
+  }
+
+  soapRequest(path, action, body, cb) {
+    try {
+      const options = {
+        host: lumixAddress,
+        port: 60606, // Default for CDS_control
+        path: path,
+        method: 'POST',
+        headers: {
+          'SOAPAction': `"${action}"`,
+          'Content-Type': 'text/xml; charset="utf-8"',
+          'Content-Length': Buffer.byteLength(body)
+        }
+      };
+
+      const req = http.request(options, (response) => {
+        let str = '';
+        response.on('data', (chunk) => str += chunk);
+        response.on('end', () => {
+          if (response.statusCode !== 200) {
+            console.log('SOAP Response Status:', response.statusCode, 'Body:', str);
+            return cb('SOAP error ' + response.statusCode);
+          }
+          parseString(str, cb);
+        });
+      });
+
+      req.on('error', (err) => {
+        console.log('SOAP Request Failed:', err.message);
+        cb(err);
+      });
+
+      req.write(body);
+      req.end();
+    } catch (e) {
+      cb(e);
+    }
   }
 }
 

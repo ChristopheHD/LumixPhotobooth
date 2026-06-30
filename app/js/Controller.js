@@ -1,5 +1,7 @@
 'use strict';
 require('./config');
+var fs = require('fs');
+var path = require('path');
 var $ = require('jquery');
 var Lumix = require('./Lumix');
 
@@ -177,10 +179,6 @@ class Controller {
   }
 
   downloadImage(data) {
-    const blob = new Blob([data], { type: 'image/jpeg' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-
     const now = new Date();
     const timestamp = now.getFullYear() +
       String(now.getMonth() + 1).padStart(2, '0') +
@@ -189,14 +187,33 @@ class Controller {
       String(now.getMinutes()).padStart(2, '0') +
       String(now.getSeconds()).padStart(2, '0');
 
-    a.href = url;
-    a.download = `lumix_capture_${timestamp}.jpg`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    }, 0);
+    const filename = `lumix_capture_${timestamp}.jpg`;
+    const capturesDir = path.join(__dirname, '..', 'captures');
+
+    try {
+      if (!fs.existsSync(capturesDir)) {
+        fs.mkdirSync(capturesDir, { recursive: true });
+      }
+
+      const filepath = path.join(capturesDir, filename);
+      fs.writeFileSync(filepath, data);
+      console.log(`Photo saved successfully to: ${filepath}`);
+    } catch (e) {
+      console.error('Failed to save photo to disk:', e);
+
+      // Fallback to browser download if fs fails
+      const blob = new Blob([data], { type: 'image/jpeg' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }, 0);
+    }
   }
 
   attempt(fn, callback, tries) {

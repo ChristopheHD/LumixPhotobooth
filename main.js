@@ -34,7 +34,7 @@ function createWindow () {
   }));
 
   // Redirect renderer logs to terminal
-  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+  mainWindow.webContents.on('console-message', (event, message) => {
     console.log(`[Renderer] ${message}`);
   });
 

@@ -13,10 +13,17 @@ let mainWindow;
 
 function createWindow () {
 
-  console.log("Loading");
+  console.log("Loading Electron window...");
 
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1200, height: 600});
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 600,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false
+    }
+  });
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/app/index.html');
   // Open the DevTools.

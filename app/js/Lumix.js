@@ -6,7 +6,7 @@ var parseString = require('xml2js').parseString;
 var LumixServer = require('./LumixServer');
 
 var lumixAddress = '192.168.54.1';
-const deviceName = 'DMC-CM1';
+const deviceName = 'DMC-G7';
 const deviceId = '4D454930-0100-1000-8000-F02765BACACE';
 
 const init = '/cam.cgi?mode=accctrl&type=req_acc&value=' + deviceId + '&value2=' + deviceName;
@@ -48,9 +48,10 @@ class Lumix {
         path: path,
       };
 
-      // console.log(options);
+      console.log('Sending GET request to:', options.host + ':' + options.port + options.path);
 
       let callback = function (response) {
+        console.log('Response Status:', response.statusCode, 'from:', options.path);
         if (cb) {
           if (bin) {
             var data = [];
@@ -58,6 +59,7 @@ class Lumix {
               data.push(chunk);
             }).on('end', function () {
               var buffer = Buffer.concat(data);
+              console.log('Binary data received, length:', buffer.length);
               cb(null, buffer);
             });
           }else {
@@ -65,6 +67,7 @@ class Lumix {
             response.on('data', function (chunk) {
               str += chunk;
             }).on('end', function () {
+              console.log('Response body:', str);
               cb(null, str);
             });
           }
@@ -73,13 +76,13 @@ class Lumix {
 
       var req = http.request(options, callback);
       req.on('error', function (err) {
-        console.log('HTTP Request Failed');
+        console.log('HTTP Request Failed for', options.path, ':', err.message);
         cb(err);
       });
 
       req.end();
     }catch (e) {
-      console.log(e);
+      console.log('Error in getRequest:', e);
       cb && cb('Get request failed');
     }
   }
@@ -105,13 +108,25 @@ class Lumix {
   }
 
   initialize() {
-    this.sendLumix(init);
+    console.log('Initializing Lumix with ID:', deviceId, 'Name:', deviceName);
+    this.sendLumix(init, (err, res) => {
+      if (err) console.error('Initialization error:', err);
+      else console.log('Initialization success');
+    });
     this.startHeartbeat();
   }
 
   startStream() {
+    console.log('Starting stream...');
     this.sendLumix(recmode, (err, result)=> {
-      this.sendLumix(startstream);
+      if (err) console.error('Error switching to recmode:', err);
+      else {
+        console.log('Switched to recmode, now starting stream on port:', global.PORT);
+        this.sendLumix(startstream, (err, res) => {
+          if (err) console.error('Error starting stream:', err);
+          else console.log('Stream start command sent');
+        });
+      }
     });
   }
 

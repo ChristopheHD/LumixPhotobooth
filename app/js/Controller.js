@@ -9,6 +9,7 @@ var previewImageElement = document.querySelector('#previewImage');
 
 class Controller {
   constructor() {
+    console.log('Controller initializing...');
     var camera = new Lumix();
 
     camera.initialize();
@@ -33,6 +34,7 @@ class Controller {
 
   displayImage(imgData) {
     if(imgData){
+      // console.log('Displaying image data, length:', imgData.length);
       this.imageObj.onload = function() {
         context.drawImage(this, 0, 0, this.width, this.height, 0, 0, canvas.width, canvas.height);
       };

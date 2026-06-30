@@ -14,13 +14,20 @@ class LumixServer {
     });
 
     this.socket.on('listening', function () {
-      console.log('Server listening');
+      console.log('UDP Server listening on port:', global.PORT);
+    });
+
+    this.socket.on('error', (err) => {
+      console.error('UDP Server error:', err);
     });
 
     this.socket.bind(global.PORT);
   }
 
   messageHandler(msg, rinfo) {
+    if (this.count % 100 === 0) {
+      console.log('Received UDP packet from:', rinfo.address, 'length:', msg.length, 'total packets:', this.count);
+    }
     //Get offset from header
     var offset = 144;
     for (var i = 0; i < 320; i++) {

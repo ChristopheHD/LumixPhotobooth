@@ -90,6 +90,11 @@ body {
     transform: scale(1.05);
   }
 
+  &:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 4px;
+  }
+
   &:active {
     transform: scale(0.95);
   }
@@ -98,6 +103,20 @@ body {
     background-color: #555;
     cursor: not-allowed;
     transform: none;
+  }
+}
+
+.shortcut-hint {
+  color: #888;
+  font-size: 14px;
+  margin-top: 15px;
+
+  strong {
+    color: #bbb;
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: normal;
   }
 }
 

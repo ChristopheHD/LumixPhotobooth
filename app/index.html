@@ -10,11 +10,12 @@
     <div class="container">
       <div class="viewport">
         <canvas id="canvas" width="800" height="600"></canvas>
-        <div id="countdown" class="overlay hidden"></div>
+        <div id="countdown" class="overlay hidden" aria-live="assertive"></div>
         <div id="flash" class="overlay hidden"></div>
       </div>
       <br>
       <button id="captureButton" class="capture" aria-label="Take photo">Capture</button>
+      <p class="shortcut-hint">Press <strong>Space</strong> to take photo</p>
     </div>
 
     <script src="js/index.js"></script>

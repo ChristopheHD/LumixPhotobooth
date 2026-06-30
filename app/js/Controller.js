@@ -58,7 +58,7 @@ class Controller {
     var count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.captureButton.textContent = '🎂 Preparing...';
+      this.captureButton.textContent = 'Preparing...';
     }
 
     countdownElement.classList.remove('hidden');
@@ -147,7 +147,7 @@ class Controller {
 
   capture() {
     this.captureButton.disabled = true;
-    this.captureButton.textContent = '🎂 Capturing...';
+    this.captureButton.textContent = 'Capturing...';
 
     this.camera.capture((err, ok)=>{
       if(err){

@@ -48,10 +48,10 @@ class Lumix {
         path: path,
       };
 
-      console.log('Sending GET request to:', options.host + ':' + options.port + options.path);
-
       let callback = function (response) {
-        console.log('Response Status:', response.statusCode, 'from:', options.path);
+        if (response.statusCode !== 200) {
+          console.log('Response Status:', response.statusCode, 'from:', options.path);
+        }
         if (cb) {
           if (bin) {
             var data = [];
@@ -59,7 +59,6 @@ class Lumix {
               data.push(chunk);
             }).on('end', function () {
               var buffer = Buffer.concat(data);
-              console.log('Binary data received, length:', buffer.length);
               cb(null, buffer);
             });
           }else {
@@ -67,7 +66,6 @@ class Lumix {
             response.on('data', function (chunk) {
               str += chunk;
             }).on('end', function () {
-              console.log('Response body:', str);
               cb(null, str);
             });
           }
@@ -89,6 +87,9 @@ class Lumix {
 
   sendLumix(path, cb) {
     this.getRequest(path, function (err, str) {
+      if (err) {
+        console.error('Lumix Error for', path, ':', err);
+      }
       if (cb) {
         if (err) {
           return cb(err, str);
@@ -108,25 +109,13 @@ class Lumix {
   }
 
   initialize() {
-    console.log('Initializing Lumix with ID:', deviceId, 'Name:', deviceName);
-    this.sendLumix(init, (err, res) => {
-      if (err) console.error('Initialization error:', err);
-      else console.log('Initialization success');
-    });
+    this.sendLumix(init);
     this.startHeartbeat();
   }
 
   startStream() {
-    console.log('Starting stream...');
     this.sendLumix(recmode, (err, result)=> {
-      if (err) console.error('Error switching to recmode:', err);
-      else {
-        console.log('Switched to recmode, now starting stream on port:', global.PORT);
-        this.sendLumix(startstream, (err, res) => {
-          if (err) console.error('Error starting stream:', err);
-          else console.log('Stream start command sent');
-        });
-      }
+      this.sendLumix(startstream);
     });
   }
 

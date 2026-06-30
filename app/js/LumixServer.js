@@ -37,7 +37,7 @@ class LumixServer {
       }
     }
 
-    var jpgData = new Buffer(msg.length - offset);
+    var jpgData = Buffer.alloc(msg.length - offset);
     msg.copy(jpgData, 0, offset);
 
     this.imageData = jpgData.toString('base64');

@@ -5,11 +5,9 @@ var Lumix = require("./Lumix");
 
 var canvas = document.querySelector('#canvas');
 var context = canvas.getContext('2d');
-var previewImageElement = document.querySelector('#previewImage');
 
 class Controller {
   constructor() {
-    console.log('Controller initializing...');
     var camera = new Lumix();
 
     camera.initialize();
@@ -70,8 +68,7 @@ class Controller {
 
         // Save photo
         var previewImageData = data.toString('base64');
-        previewImageElement.src = "data:image/jpg;base64," + previewImageData;
-        console.log("set img", previewImageElement);
+        console.log("Photo downloaded successfully, length:", previewImageData.length);
         
         this.camera.startStream();
       }, 3);

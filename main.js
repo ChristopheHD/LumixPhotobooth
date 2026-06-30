@@ -35,11 +35,11 @@ function createWindow () {
 
   // Redirect renderer logs to terminal
   mainWindow.webContents.on('console-message', (event, message) => {
-    console.log(`[Renderer] ${message}`);
+    console.log(message);
   });
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
   mainWindow.setFullScreen(true);
   mainWindow.setMenu(null);
   // Emitted when the window is closed.

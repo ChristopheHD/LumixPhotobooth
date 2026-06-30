@@ -305,8 +305,8 @@ class Lumix {
           var contentNumber = parseInt(result.camrply.total_content_number[0]);
           setTimeout(function () {
             //DL DO DT prefixes for files
-            var jpgUrl = '/DL100' + (contentNumber + global.offsetImageID) + '.jpg';
-            console.log(jpgUrl);
+            var paddedNumber = String(contentNumber + global.offsetImageID).padStart(4, '0');
+            var jpgUrl = '/DL100' + paddedNumber + '.jpg';
             _this.getBinary(jpgUrl, function (err, result) {
               _this.downloading = false;
               if(err || !result || result.length == 0){

@@ -8,9 +8,13 @@
   </head>
   <body>
     <div class="container">
-      <canvas id="canvas"></canvas>
+      <div class="viewport">
+        <canvas id="canvas"></canvas>
+        <div id="countdown" class="overlay hidden">3</div>
+        <div id="flash" class="overlay hidden"></div>
+      </div>
       <br>
-      <a class="capture">Capture</a>
+      <button id="captureButton" class="capture">Capture</button>
     </div>
 
     <script src="js/index.js"></script>

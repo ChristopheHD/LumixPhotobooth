@@ -2,6 +2,8 @@
 
 A minimal Electron application for running a photobooth using a Lumix camera.
 
+![Lumix Photobooth Preview](images/preview-screenshot.png)
+
 ## Prerequisites
 
 Get Node.js if you haven't already. [We highly recommend using nvm](https://github.com/creationix/nvm).

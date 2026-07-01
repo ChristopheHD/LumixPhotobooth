@@ -47,6 +47,5 @@ server/client/**/*-min.js
 
 *.log
 
-images
 log.txt
 errorLog.txt

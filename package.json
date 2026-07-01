@@ -37,7 +37,7 @@
     "postcss-cli": "^11.0.1",
     "postcss-sort-media-queries": "^6.6.2",
     "sass": "^1.65.1",
-    "through2": "^4.0.2"
+    "through2": "^5.0.4"
   },
   "dependencies": {
     "jquery": "^4.0.0",

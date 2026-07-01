@@ -14,7 +14,8 @@ class WifiSetup {
     });
 
     this.isConnecting = false;
-    this.scanInterval = null;
+    this.isScanning = false;
+    this.scanTimeout = null;
 
     this.checkInitialConnection();
   }
@@ -36,21 +37,20 @@ class WifiSetup {
   }
 
   startScanning() {
+    this.isScanning = true;
     this.scan(); // Initial scan
-    this.scanInterval = setInterval(() => {
-      this.scan();
-    }, 1000); // Scan every 1 second for faster updates
   }
 
   stopScanning() {
-    if (this.scanInterval) {
-      clearInterval(this.scanInterval);
-      this.scanInterval = null;
+    this.isScanning = false;
+    if (this.scanTimeout) {
+      clearTimeout(this.scanTimeout);
+      this.scanTimeout = null;
     }
   }
 
   scan() {
-    if (this.isConnecting) return;
+    if (this.isConnecting || !this.isScanning) return;
 
     // Only show "Searching..." if the list is completely empty
     if (this.wifiList.children.length === 0) {
@@ -58,6 +58,12 @@ class WifiSetup {
     }
 
     wifi.scan((error, networks) => {
+      // Bolt optimization: Schedule next scan only AFTER current scan completes.
+      // This prevents CPU spin and child process accumulation from overlapping OS network scans.
+      if (this.isScanning && !this.isConnecting) {
+        this.scanTimeout = setTimeout(() => this.scan(), 2000); // 2 second delay between scans
+      }
+
       if (this.isConnecting) return;
       if (error) {
         console.error('Error during Wi-Fi scan:', error);

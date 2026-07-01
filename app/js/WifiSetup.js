@@ -16,7 +16,23 @@ class WifiSetup {
     this.isConnecting = false;
     this.scanInterval = null;
 
-    this.startScanning();
+    this.checkInitialConnection();
+  }
+
+  checkInitialConnection() {
+    const http = require('http');
+    const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
+      // Camera is already reachable, skip Wi-Fi setup
+      console.log('Caméra déjà connectée au démarrage.');
+      this.startApp();
+    }).on('error', (err) => {
+      // Camera is not reachable, start Wi-Fi setup
+      this.startScanning();
+    });
+
+    req.setTimeout(1000, () => {
+      req.destroy();
+    });
   }
 
   startScanning() {

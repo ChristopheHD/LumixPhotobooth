@@ -59,26 +59,50 @@ ipcMain.on('print-image', (event, imagePath) => {
     show: false,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      webSecurity: false // Required to load local file:// from data URL
     }
   });
 
   const htmlContent = `
     <html>
+      <head><title>Photobooth Print</title></head>
       <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
         img { width: 100%; height: 100%; object-fit: cover; }
         @page { margin: 0; size: landscape; }
       </style>
       <body>
-        <img src="file://${imagePath}" />
+        <img id="print-image" src="file://${imagePath}" />
+        <script>
+          const img = document.getElementById('print-image');
+          img.onload = () => { window.imgLoaded = true; };
+          img.onerror = () => { window.imgLoaded = 'error'; };
+        </script>
       </body>
     </html>
   `;
 
   printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
 
-  printWindow.webContents.on('did-finish-load', () => {
+  printWindow.webContents.on('did-finish-load', async () => {
+    // Wait for the image to be fully loaded
+    let loaded = false;
+    for (let i = 0; i < 50; i++) { // Max 5 seconds
+      loaded = await printWindow.webContents.executeJavaScript('window.imgLoaded');
+      if (loaded) break;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    if (loaded === 'error') {
+      console.error('Failed to load image in print window.');
+      printWindow.close();
+      if (mainWindow) {
+        mainWindow.webContents.send('print-finished', false, 'Image load error');
+      }
+      return;
+    }
+
     printWindow.webContents.print({
       silent: true,
       printBackground: true,

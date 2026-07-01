@@ -54,18 +54,19 @@ class Lumix {
         }
         if (cb) {
           if (bin) {
-            var data = [];
+            var binData = [];
             response.on('data', function (chunk) {
-              data.push(chunk);
+              binData.push(chunk);
             }).on('end', function () {
-              var buffer = Buffer.concat(data);
+              var buffer = Buffer.concat(binData);
               cb(null, buffer);
             });
           }else {
-            var str = '';
+            var textData = [];
             response.on('data', function (chunk) {
-              str += chunk;
+              textData.push(chunk);
             }).on('end', function () {
+              var str = Buffer.concat(textData).toString('utf8');
               cb(null, str);
             });
           }
@@ -424,9 +425,10 @@ class Lumix {
       };
 
       const req = http.request(options, (response) => {
-        let str = '';
-        response.on('data', (chunk) => str += chunk);
+        let data = [];
+        response.on('data', (chunk) => data.push(chunk));
         response.on('end', () => {
+          let str = Buffer.concat(data).toString('utf8');
           if (response.statusCode !== 200) {
             console.log('SOAP Response Status:', response.statusCode, 'Body:', str);
             return cb('SOAP error ' + response.statusCode);

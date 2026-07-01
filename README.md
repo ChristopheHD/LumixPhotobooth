@@ -45,7 +45,3 @@ Configuration settings can be found and modified in `app/js/config.js`:
 - **Node.js**: Requires version 20.0.0 or higher.
 - **Camera**: Configured and tested with the Lumix DMC-G7 camera.
 - **Platform**: Runs on standard Electron platforms (includes specific optimizations for Linux/Wayland compatibility).
-
-## Notes
-
-- The first time connecting to the camera will require the user to accept the incoming connection from this program. Once hitting "Yes", you will need to restart this program.

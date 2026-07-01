@@ -6,6 +6,8 @@ Steps to get this set up to run
 ========
 `npm install`
 
+*Note: This project strictly uses npm for package management.*
+
 Steps to get this running
 ========
 1. Start camera

@@ -2,7 +2,6 @@
 require('./config');
 var fs = require('fs');
 var path = require('path');
-var $ = require('jquery');
 const { ipcRenderer } = require('electron');
 var Lumix = require('./Lumix');
 

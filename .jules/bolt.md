@@ -5,3 +5,10 @@
 ## 2023-10-27 - [Network Polling on Constrained Hardware]
 **Learning:** Using `setInterval` for open-loop network requests (like a 1s camera heartbeat) can cause overlapping execution, request stacking, and CPU lockups if the network is slow or the hardware is constrained.
 **Action:** Replace `setInterval` with chained `setTimeout` that only schedules the next execution *after* the callbacks/promises from the current network requests have resolved.
+## 2024-05-24 - Implicit String Concatenation overhead on Network Streams
+**Learning:** Node.js stream chunks are `Buffer` objects. Using `str += chunk` inside `.on('data')` forces V8 to convert the buffer to a string and allocate a new string in memory for every single chunk, creating immense GC pressure on slow, constrained hardware (like the Raspberry Pi this app targets).
+**Action:** Use an array `data.push(chunk)` and concatenate at the end with `Buffer.concat(data).toString('utf8')` to reduce memory allocations and GC thrashing.
+
+## 2024-05-24 - Unused UI libraries in constrained environments
+**Learning:** Having `var $ = require('jquery');` in a file like `Controller.js`, even if totally unused, forces Electron/Node to read, parse, and execute the entire library synchronously during app startup, causing measurable delay on constrained hardware.
+**Action:** Always manually audit `require()` statements to ensure no unused large libraries are included, even if a tree-shaker isn't present to do it automatically.

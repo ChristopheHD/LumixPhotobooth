@@ -132,14 +132,19 @@ class WifiSetup {
   waitForCamera() {
     const http = require('http');
     let attempts = 0;
-    const maxAttempts = 40; // Max 40 attempts, at ~250ms each, ~10 seconds total
+    const maxAttempts = 15; // Max 15 attempts, at ~1000ms each, ~15 seconds total
 
     const checkCamera = () => {
       attempts++;
       const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
         // Any response means the camera is reachable
-        console.log('Caméra détectée !');
-        this.startApp();
+        console.log('Caméra détectée ! Attente de stabilisation...');
+
+        // Wait an additional 2 seconds before initializing commands to let the camera settle
+        setTimeout(() => {
+          this.startApp();
+        }, 2000);
+
       }).on('error', (err) => {
         if (attempts >= maxAttempts) {
           console.error('Impossible de joindre la caméra après connexion WiFi.');
@@ -149,11 +154,11 @@ class WifiSetup {
           this.startScanning();
           return;
         }
-        setTimeout(checkCamera, 200);
+        setTimeout(checkCamera, 1000);
       });
 
       // Add timeout to request
-      req.setTimeout(250, () => {
+      req.setTimeout(1000, () => {
         req.destroy();
       });
     };

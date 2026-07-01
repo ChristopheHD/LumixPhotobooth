@@ -23,7 +23,7 @@ class WifiSetup {
     const http = require('http');
     const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
       // Camera is already reachable, skip Wi-Fi setup
-      console.log('Caméra déjà connectée au démarrage.');
+      console.log('Camera already connected on startup.');
       this.startApp();
     }).on('error', (err) => {
       // Camera is not reachable, start Wi-Fi setup
@@ -39,7 +39,7 @@ class WifiSetup {
     this.scan(); // Initial scan
     this.scanInterval = setInterval(() => {
       this.scan();
-    }, 2000); // Scan every 2 seconds for faster updates
+    }, 1000); // Scan every 1 second for faster updates
   }
 
   stopScanning() {
@@ -52,16 +52,16 @@ class WifiSetup {
   scan() {
     if (this.isConnecting) return;
 
-    // Only show "Recherche..." if the list is completely empty
+    // Only show "Searching..." if the list is completely empty
     if (this.wifiList.children.length === 0) {
-      this.wifiList.innerHTML = '<li>Recherche des réseaux...</li>';
+      this.wifiList.innerHTML = '<li>Searching for networks...</li>';
     }
 
     wifi.scan((error, networks) => {
       if (this.isConnecting) return;
       if (error) {
-        console.error('Erreur lors du scan WiFi:', error);
-        this.wifiError.textContent = 'Erreur lors de la recherche des réseaux WiFi.';
+        console.error('Error during Wi-Fi scan:', error);
+        this.wifiError.textContent = 'Error searching for Wi-Fi networks.';
         this.wifiError.classList.remove('hidden');
         this.wifiList.innerHTML = '';
         return;
@@ -69,7 +69,7 @@ class WifiSetup {
 
       this.wifiList.innerHTML = '';
       if (networks.length === 0) {
-        this.wifiList.innerHTML = '<li>Aucun réseau trouvé</li>';
+        this.wifiList.innerHTML = '<li>No network found</li>';
         return;
       }
 
@@ -110,21 +110,21 @@ class WifiSetup {
   connect(ssid) {
     this.isConnecting = true;
     this.stopScanning();
-    this.wifiList.innerHTML = `<li>Connexion à ${ssid}...</li>`;
+    this.wifiList.innerHTML = `<li>Connecting to ${ssid}...</li>`;
     this.wifiError.classList.add('hidden');
 
     wifi.connect({ ssid: ssid }, (error) => {
       if (error) {
-        console.error(`Erreur de connexion à ${ssid}:`, error);
-        this.wifiError.textContent = `Erreur de connexion à ${ssid}. Veuillez réessayer.`;
+        console.error(`Connection error to ${ssid}:`, error);
+        this.wifiError.textContent = `Connection error to ${ssid}. Please try again.`;
         this.wifiError.classList.remove('hidden');
         this.isConnecting = false;
         this.startScanning(); // Refresh the list and resume background scan
         return;
       }
 
-      console.log(`Connecté à ${ssid}. Attente de l'appareil photo...`);
-      this.wifiList.innerHTML = `<li>Attente de l'appareil photo...</li>`;
+      console.log(`Connected to ${ssid}. Waiting for camera...`);
+      this.wifiList.innerHTML = `<li>Waiting for camera...</li>`;
       this.waitForCamera();
     });
   }
@@ -138,7 +138,7 @@ class WifiSetup {
       attempts++;
       const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
         // Any response means the camera is reachable
-        console.log('Caméra détectée ! Attente de stabilisation...');
+        console.log('Camera detected! Waiting for stabilization...');
 
         // Wait an additional 2 seconds before initializing commands to let the camera settle
         setTimeout(() => {
@@ -147,8 +147,8 @@ class WifiSetup {
 
       }).on('error', (err) => {
         if (attempts >= maxAttempts) {
-          console.error('Impossible de joindre la caméra après connexion WiFi.');
-          this.wifiError.textContent = 'Connexion WiFi réussie, mais appareil photo injoignable.';
+          console.error('Failed to reach camera after Wi-Fi connection.');
+          this.wifiError.textContent = 'Wi-Fi connected successfully, but camera is unreachable.';
           this.wifiError.classList.remove('hidden');
           this.isConnecting = false;
           this.startScanning();

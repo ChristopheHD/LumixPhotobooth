@@ -9,3 +9,7 @@
 ## 2025-05-24 - Aspect Ratio and Visual Comfort
 **Learning:** For a photobooth, users expect to see themselves as the camera sees them. Using `object-fit: contain` with a black background ensures that the camera's natural aspect ratio is respected without distortion, even when the container dimensions differ, providing a more professional and visually comfortable experience.
 **Action:** Use `object-fit: contain` for camera previews to maintain correct proportions while filling the available viewport.
+
+## 2025-05-24 - Semantic Roles and Dynamic Status
+**Learning:** Custom interactive elements (like `<li>` elements acting as buttons) require `role="button"` and `tabIndex=0` to be fully accessible to screen readers, preventing them from being read as generic list items. Furthermore, wrapping dynamic status changes in a container with `aria-live="polite"` ensures visually impaired users are kept informed of background updates automatically.
+**Action:** Always verify custom interactive elements have correct semantic roles and use `aria-live` for status text that updates dynamically without user interaction.

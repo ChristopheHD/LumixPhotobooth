@@ -97,6 +97,7 @@ class WifiSetup {
         const li = document.createElement('li');
         li.textContent = network.ssid;
         li.tabIndex = 0; // Make it focusable for keyboard navigation
+        li.setAttribute('role', 'button');
 
         const connectHandler = () => this.connect(network.ssid);
 

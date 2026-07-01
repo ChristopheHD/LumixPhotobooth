@@ -10,7 +10,7 @@
     <div id="wifi-screen" class="wifi-container">
       <h1>Connect Camera</h1>
       <p id="wifi-error" class="hidden error-text"></p>
-      <ul id="wifi-list" class="wifi-list">
+      <ul id="wifi-list" class="wifi-list" aria-live="polite">
         <li>Searching for networks...</li>
       </ul>
     </div>
@@ -27,7 +27,7 @@
     </div>
 
     <div id="reviewScreen" class="overlay-screen hidden">
-      <img id="reviewImage" />
+      <img id="reviewImage" alt="Captured photo" />
       <div id="reviewControls" class="review-controls">
         <div class="review-btn-group">
           <button id="printButton" class="review-btn print-btn">Print</button>

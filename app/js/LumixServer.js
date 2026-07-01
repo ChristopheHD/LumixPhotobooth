@@ -51,9 +51,9 @@ class LumixServer {
     msg.copy(this.imageBuffer, 0, offset);
     this.imageLength = jpgLength;
 
-    // We store a slice. Note: Buffer.slice() in older Node (or subarray in newer)
-    // doesn't copy the memory, it just creates a view.
-    this.imageData = this.imageBuffer.subarray(0, this.imageLength);
+    // We create a copy to avoid data corruption if the buffer is overwritten
+    // while the renderer is still processing the previous frame.
+    this.imageData = Buffer.from(this.imageBuffer.subarray(0, this.imageLength));
 
     this.count++;
   }

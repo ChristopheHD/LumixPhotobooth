@@ -6,8 +6,7 @@ var $ = require('jquery');
 const { ipcRenderer } = require('electron');
 var Lumix = require('./Lumix');
 
-var canvas = document.querySelector('#canvas');
-var context = canvas.getContext('2d');
+var previewImage = document.querySelector('#preview');
 var captureButton = document.querySelector('#captureButton');
 var countdownElement = document.querySelector('#countdown');
 var flashElement = document.querySelector('#flash');
@@ -21,9 +20,10 @@ class Controller {
 
     this.camera = camera;
 
-    // Bolt optimization: Use createImageBitmap for high-performance decoding
-    this.currentBitmap = null;
-    this.isDecoding = false;
+    // Display optimization
+    this.previewImage = previewImage;
+    this.currentUrl = null;
+    this.isUpdating = false;
     this.lastProcessedCount = -1;
 
     // Performance metrics
@@ -135,27 +135,28 @@ class Controller {
 
   async displayImage(imgData) {
     // imgData is now a Buffer/Uint8Array
-    if (imgData && !this.isDecoding) {
-      this.isDecoding = true;
+    if (imgData && !this.isUpdating) {
+      this.isUpdating = true;
       this.lastProcessedCount = this.camera.server.count;
 
       try {
-        // Bolt optimization: createImageBitmap decodes the image off the main thread.
-        // We create a Blob from the binary data.
+        // Using Blob and object URL for high-performance data transfer to <img>
         const blob = new Blob([imgData], { type: 'image/jpeg' });
-        const bitmap = await createImageBitmap(blob);
+        const url = URL.createObjectURL(blob);
 
-        // Clean up previous bitmap to prevent memory leaks
-        if (this.currentBitmap) {
-          this.currentBitmap.close();
+        // Update image source
+        const oldUrl = this.currentUrl;
+        this.previewImage.src = url;
+        this.currentUrl = url;
+
+        // Revoke old URL to free memory after the new image starts loading
+        if (oldUrl) {
+          URL.revokeObjectURL(oldUrl);
         }
-
-        this.currentBitmap = bitmap;
-        context.drawImage(this.currentBitmap, 0, 0, this.currentBitmap.width, this.currentBitmap.height, 0, 0, canvas.width, canvas.height);
       } catch (e) {
-        console.error('Error decoding preview image:', e);
+        console.error('Error updating preview image:', e);
       } finally {
-        this.isDecoding = false;
+        this.isUpdating = false;
       }
     }
   }

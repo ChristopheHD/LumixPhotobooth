@@ -7,7 +7,7 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "npm run build:css && electron main.js --no-sandbox",
+    "start": "npm run build:css && electron main.js --no-sandbox --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy",
     "build:css": "sass app/sass/style.scss app/css/style.css && postcss app/css/style.css -o app/css/style.css",
     "watch:css": "sass --watch app/sass/style.scss app/css/style.css",
     "dist": "npm run build:css && electron-packager . --out=dist --overwrite --linux",

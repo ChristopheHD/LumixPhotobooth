@@ -1,3 +1,3 @@
 'use strict';
-var Controller = require('./js/Controller');
-new Controller();
+var WifiSetup = require('./js/WifiSetup');
+new WifiSetup();

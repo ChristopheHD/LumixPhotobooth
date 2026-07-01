@@ -1,3 +1,3 @@
 global.PORT = 49473;
 global.preferredImageSize = 'CAM_ORG'; // Options: CAM_ORG (Original), CAM_LRGTN (Large), CAM_TN (Thumbnail)
-global.AUTO_PRINT = true;
+global.PRINT = true;

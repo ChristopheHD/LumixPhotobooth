@@ -35,6 +35,17 @@ class Controller {
     this.countdownElement = document.getElementById('countdown');
     this.flashElement = document.getElementById('flash');
 
+    // Review Elements
+    this.reviewScreen = document.getElementById('reviewScreen');
+    this.reviewImage = document.getElementById('reviewImage');
+    this.reviewControls = document.getElementById('reviewControls');
+    this.printButton = document.getElementById('printButton');
+    this.newPhotoButton = document.getElementById('newPhotoButton');
+    this.reviewStatus = document.getElementById('reviewStatus');
+    this.reviewImageUrl = null;
+    this.currentPrintFilepath = null;
+    this.isReviewActive = false;
+
     // Bolt optimization: Bind render once to avoid per-frame allocation
     this.render = this.render.bind(this);
 
@@ -45,37 +56,58 @@ class Controller {
       } else {
         console.log('Print successful callback.');
       }
-      this.setButtonState('Capture', false);
-      this.captureButton.disabled = false;
-      document.querySelectorAll('.shortcut-hint').forEach(el => el.style.visibility = 'visible');
-      this.camera.startStream();
+      this.closeReviewScreen();
     });
 
     //Attach events
     captureButton.addEventListener('click', () => this.startCountdown());
+
+    this.printButton.addEventListener('click', () => this.triggerPrint());
+    this.newPhotoButton.addEventListener('click', () => this.closeReviewScreen());
+
     window.addEventListener('keydown', (e) => {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return;
+      }
+
       if (e.code === 'Space') {
-        const activeElement = document.activeElement;
-        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-          return;
-        }
         e.preventDefault();
 
-        const spaceKey = document.getElementById('spaceKey');
-        if (spaceKey) {
-          spaceKey.classList.add('pressed');
-        }
+        if (this.isReviewActive) {
+          const reviewSpaceKey = document.getElementById('reviewSpaceKey');
+          if (reviewSpaceKey) reviewSpaceKey.classList.add('active');
 
-        this.startCountdown();
+          if (!this.printButton.disabled && !this.newPhotoButton.disabled) {
+            this.closeReviewScreen();
+          }
+        } else {
+          const spaceKey = document.getElementById('spaceKey');
+          if (spaceKey) spaceKey.classList.add('active');
+          this.startCountdown();
+        }
+      } else if (e.code === 'Enter') {
+        if (this.isReviewActive && global.PRINT) {
+          e.preventDefault();
+          const enterKey = document.getElementById('enterKey');
+          if (enterKey) enterKey.classList.add('active');
+
+          if (!this.printButton.disabled) {
+            this.triggerPrint();
+          }
+        }
       }
     });
 
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
         const spaceKey = document.getElementById('spaceKey');
-        if (spaceKey) {
-          spaceKey.classList.remove('pressed');
-        }
+        if (spaceKey) spaceKey.classList.remove('active');
+        const reviewSpaceKey = document.getElementById('reviewSpaceKey');
+        if (reviewSpaceKey) reviewSpaceKey.classList.remove('active');
+      } else if (e.code === 'Enter') {
+        const enterKey = document.getElementById('enterKey');
+        if (enterKey) enterKey.classList.remove('active');
       }
     });
 
@@ -216,19 +248,76 @@ class Controller {
         console.log('Photo downloaded from camera, starting browser download...');
         const filepath = this.downloadImage(data);
 
-        if (global.AUTO_PRINT && filepath) {
-          this.captureButton.disabled = true;
-          this.setButtonState('Printing...', true);
-          document.querySelectorAll('.shortcut-hint').forEach(el => el.style.visibility = 'hidden');
-          ipcRenderer.send('print-image', filepath);
+        if (filepath) {
+          this.showReviewScreen(data, filepath);
         } else {
-          this.captureButton.disabled = false;
-          this.setButtonState('Capture', false);
           this.camera.startStream();
         }
       }, 3);
 
     });
+  }
+
+  showReviewScreen(imgData, filepath) {
+    this.isReviewActive = true;
+    this.currentPrintFilepath = filepath;
+
+    // Stop camera stream to focus on review
+    this.camera.stopStream();
+
+    const blob = new Blob([imgData], { type: 'image/jpeg' });
+    const url = URL.createObjectURL(blob);
+    this.reviewImageUrl = url;
+    this.reviewImage.src = url;
+
+    this.reviewScreen.classList.remove('hidden');
+    this.reviewStatus.classList.add('hidden');
+
+    this.printButton.disabled = false;
+    this.newPhotoButton.disabled = false;
+
+    if (global.PRINT) {
+      this.reviewControls.classList.remove('hidden');
+    } else {
+      this.reviewControls.classList.add('hidden');
+      // If PRINT is false, show for 3 seconds then return
+      setTimeout(() => {
+        if (this.isReviewActive) {
+          this.closeReviewScreen();
+        }
+      }, 3000);
+    }
+  }
+
+  triggerPrint() {
+    if (!this.currentPrintFilepath || this.printButton.disabled || !global.PRINT) return;
+
+    this.printButton.disabled = true;
+    this.newPhotoButton.disabled = true;
+    this.reviewControls.classList.add('hidden');
+    this.reviewStatus.classList.remove('hidden');
+
+    ipcRenderer.send('print-image', this.currentPrintFilepath);
+  }
+
+  closeReviewScreen() {
+    this.isReviewActive = false;
+    this.reviewScreen.classList.add('hidden');
+
+    if (this.reviewImageUrl) {
+      URL.revokeObjectURL(this.reviewImageUrl);
+      this.reviewImageUrl = null;
+      this.reviewImage.src = '';
+    }
+
+    this.currentPrintFilepath = null;
+
+    // Reset buttons state
+    this.setButtonState('Capture', false);
+    this.captureButton.disabled = false;
+
+    // Restart stream
+    this.camera.startStream();
   }
 
   downloadImage(data) {

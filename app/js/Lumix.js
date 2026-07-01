@@ -119,6 +119,10 @@ class Lumix {
     });
   }
 
+  stopStream() {
+    this.sendLumix(stopstream);
+  }
+
   startHeartbeat() {
     this.stopHeartbeat();
     var _this = this;

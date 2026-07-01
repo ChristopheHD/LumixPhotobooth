@@ -39,7 +39,7 @@ class WifiSetup {
     this.scan(); // Initial scan
     this.scanInterval = setInterval(() => {
       this.scan();
-    }, 5000); // Scan every 5 seconds
+    }, 2000); // Scan every 2 seconds for faster updates
   }
 
   stopScanning() {
@@ -73,11 +73,15 @@ class WifiSetup {
         return;
       }
 
-      // Deduplicate networks by SSID
+      // Deduplicate networks by SSID and filter for open networks only
       const uniqueNetworks = [];
       const ssids = new Set();
       for (const network of networks) {
-        if (network.ssid && !ssids.has(network.ssid)) {
+        // Only show networks without a password (Lumix networks are open)
+        // Some platforms report 'none', '', or 'Open' for no security
+        const isSecure = network.security && network.security.toLowerCase() !== 'none' && network.security.toLowerCase() !== 'open' && network.security !== '';
+
+        if (network.ssid && !isSecure && !ssids.has(network.ssid)) {
           ssids.add(network.ssid);
           uniqueNetworks.push(network);
         }
@@ -128,7 +132,7 @@ class WifiSetup {
   waitForCamera() {
     const http = require('http');
     let attempts = 0;
-    const maxAttempts = 30; // 30 seconds
+    const maxAttempts = 40; // Max 40 attempts, at ~250ms each, ~10 seconds total
 
     const checkCamera = () => {
       attempts++;
@@ -145,11 +149,11 @@ class WifiSetup {
           this.startScanning();
           return;
         }
-        setTimeout(checkCamera, 1000);
+        setTimeout(checkCamera, 200);
       });
 
       // Add timeout to request
-      req.setTimeout(1000, () => {
+      req.setTimeout(250, () => {
         req.destroy();
       });
     };

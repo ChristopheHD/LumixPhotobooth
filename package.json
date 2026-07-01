@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "jquery": "^4.0.0",
+    "node-wifi": "^2.0.16",
     "xml2js": "^0.6.2"
   }
 }

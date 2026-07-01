@@ -5,3 +5,7 @@
 ## 2025-05-24 - Accessibility and Discoverability in Photobooth UIs
 **Learning:** In headless or specialized UI environments like photobooths, visual keyboard shortcut hints (e.g., "Press Space") and `aria-live` announcements for time-sensitive events (like countdowns) significantly improve accessibility and user confidence.
 **Action:** Include persistent shortcut hints for primary actions and use `aria-live="assertive"` for countdowns to support screen reader users.
+
+## 2025-05-24 - Aspect Ratio and Visual Comfort
+**Learning:** For a photobooth, users expect to see themselves as the camera sees them. Using `object-fit: contain` with a black background ensures that the camera's natural aspect ratio is respected without distortion, even when the container dimensions differ, providing a more professional and visually comfortable experience.
+**Action:** Use `object-fit: contain` for camera previews to maintain correct proportions while filling the available viewport.

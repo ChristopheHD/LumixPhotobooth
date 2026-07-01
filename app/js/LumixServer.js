@@ -8,10 +8,14 @@ class LumixServer {
     this.socket = dgram.createSocket('udp4');
     this.count = 0;
 
-    // Bolt optimization: Pre-allocate a buffer for image data to reduce GC pressure.
-    // Standard Lumix preview images are around 640x480 or smaller, usually < 100KB.
-    // 512KB is a safe upper bound.
-    this.imageBuffer = Buffer.allocUnsafe(512 * 1024);
+    // Bolt optimization: Use double buffering to prevent data corruption
+    // without the overhead of Buffer.from() on every frame.
+    const BUFFER_SIZE = 512 * 1024; // 512KB
+    this.buffers = [
+      Buffer.allocUnsafe(BUFFER_SIZE),
+      Buffer.allocUnsafe(BUFFER_SIZE)
+    ];
+    this.activeBufferIndex = 0;
     this.imageLength = 0;
 
     var self = this;
@@ -41,19 +45,24 @@ class LumixServer {
     }
 
     // Bolt optimization: Avoid Buffer.alloc and .toString('base64') which are expensive.
-    // Instead, copy into pre-allocated buffer and store the buffer itself.
+    // Instead, copy into the currently inactive buffer (double buffering).
     const jpgLength = msg.length - offset;
-    if (jpgLength > this.imageBuffer.length) {
+    const nextBufferIndex = (this.activeBufferIndex + 1) % 2;
+    let targetBuffer = this.buffers[nextBufferIndex];
+
+    if (jpgLength > targetBuffer.length) {
       // Emergency resize if image is unexpectedly large
-      this.imageBuffer = Buffer.allocUnsafe(jpgLength + 64 * 1024);
+      targetBuffer = Buffer.allocUnsafe(jpgLength + 64 * 1024);
+      this.buffers[nextBufferIndex] = targetBuffer;
     }
 
-    msg.copy(this.imageBuffer, 0, offset);
+    msg.copy(targetBuffer, 0, offset);
     this.imageLength = jpgLength;
 
-    // We store a slice. Note: Buffer.slice() in older Node (or subarray in newer)
-    // doesn't copy the memory, it just creates a view.
-    this.imageData = this.imageBuffer.subarray(0, this.imageLength);
+    // Switch buffers: imageData now points to the newly filled buffer,
+    // while the socket will write to the other one next time.
+    this.imageData = targetBuffer.subarray(0, this.imageLength);
+    this.activeBufferIndex = nextBufferIndex;
 
     this.count++;
   }

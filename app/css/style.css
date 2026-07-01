@@ -264,12 +264,25 @@ body {
   font-size: 14px;
   margin-top: 15px;
 }
-.shortcut-hint strong {
+.shortcut-hint .kbd-key {
   color: #bbb;
   background: #333;
   padding: 2px 6px;
   border-radius: 4px;
+  font-family: monospace;
   font-weight: normal;
+  border: 1px solid #444;
+  border-bottom-width: 3px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
+  display: inline-block;
+  transition: transform 0.1s, box-shadow 0.1s, border-bottom-width 0.1s;
+}
+.shortcut-hint .kbd-key.active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.5);
+  border-bottom-width: 1px;
+  background: #444;
+  color: #fff;
 }
 
 .previewImageSmall {

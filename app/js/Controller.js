@@ -76,21 +76,21 @@ class Controller {
 
         if (this.isReviewActive) {
           const reviewSpaceKey = document.getElementById('reviewSpaceKey');
-          if (reviewSpaceKey) reviewSpaceKey.classList.add('pressed');
+          if (reviewSpaceKey) reviewSpaceKey.classList.add('active');
 
           if (!this.printButton.disabled && !this.newPhotoButton.disabled) {
             this.closeReviewScreen();
           }
         } else {
           const spaceKey = document.getElementById('spaceKey');
-          if (spaceKey) spaceKey.classList.add('pressed');
+          if (spaceKey) spaceKey.classList.add('active');
           this.startCountdown();
         }
       } else if (e.code === 'Enter') {
         if (this.isReviewActive && global.PRINT) {
           e.preventDefault();
           const enterKey = document.getElementById('enterKey');
-          if (enterKey) enterKey.classList.add('pressed');
+          if (enterKey) enterKey.classList.add('active');
 
           if (!this.printButton.disabled) {
             this.triggerPrint();
@@ -102,12 +102,12 @@ class Controller {
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
         const spaceKey = document.getElementById('spaceKey');
-        if (spaceKey) spaceKey.classList.remove('pressed');
+        if (spaceKey) spaceKey.classList.remove('active');
         const reviewSpaceKey = document.getElementById('reviewSpaceKey');
-        if (reviewSpaceKey) reviewSpaceKey.classList.remove('pressed');
+        if (reviewSpaceKey) reviewSpaceKey.classList.remove('active');
       } else if (e.code === 'Enter') {
         const enterKey = document.getElementById('enterKey');
-        if (enterKey) enterKey.classList.remove('pressed');
+        if (enterKey) enterKey.classList.remove('active');
       }
     });
 

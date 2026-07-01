@@ -125,26 +125,48 @@ class Lumix {
 
   startHeartbeat() {
     this.stopHeartbeat();
-    var _this = this;
-    this.timer = setInterval(function () {
-      if (!_this.downloading && !_this.capturing) {
-        _this.sendLumix(getstate);
-        _this.sendLumix(recmode);
+    this.isHeartbeatActive = true;
 
-        if (_this.heartBeatCount > 60) {
+    // Bolt optimization: Use chained setTimeout instead of setInterval
+    // to prevent network requests from piling up and causing CPU/socket lockups on slow connections.
+    const runHeartbeat = () => {
+      if (!this.isHeartbeatActive) return;
+
+      if (!this.downloading && !this.capturing) {
+        let pendingRequests = 2;
+        const checkDone = () => {
+          pendingRequests--;
+          if (pendingRequests === 0) {
+            this.timer = setTimeout(runHeartbeat, 1000);
+          }
+        };
+
+        this.sendLumix(getstate, checkDone);
+        this.sendLumix(recmode, checkDone);
+
+        if (this.heartBeatCount > 60) {
           //send every once in a while
-          _this.sendLumix(init);
-          _this.heartBeatCount = 0;
+          pendingRequests++;
+          this.sendLumix(init, checkDone);
+          this.heartBeatCount = 0;
         }
 
-        _this.heartBeatCount++;
+        this.heartBeatCount++;
+      } else {
+        // If downloading or capturing, just check again in 1s
+        this.timer = setTimeout(runHeartbeat, 1000);
       }
-    }, 1000);
+    };
+
+    runHeartbeat();
   }
 
   stopHeartbeat() {
-    if (this.timer)
-      clearInterval(this.timer);
+    this.isHeartbeatActive = false;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
   }
 
   captureBurst(callback, timeout){

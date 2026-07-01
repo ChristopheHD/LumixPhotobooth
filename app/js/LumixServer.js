@@ -1,6 +1,8 @@
 'use strict';
 const dgram = require('dgram');
 
+const JPEG_MAGIC = Buffer.from([0xFF, 0xD8]);
+
 // This is for the live preview
 class LumixServer {
   constructor() {
@@ -36,12 +38,12 @@ class LumixServer {
 
   messageHandler(msg, rinfo) {
     //Get offset from header
-    var offset = 144;
-    for (var i = 0; i < 320; i++) {
-      if (msg[i] === 0xFF && msg[i + 1] === 0xD8) {
-        offset = i;
-        break;
-      }
+    let offset = 144;
+
+    // Bolt optimization: Use C++ backed Buffer.indexOf instead of V8 JS loop for high frequency UDP packet parsing
+    const foundOffset = msg.indexOf(JPEG_MAGIC);
+    if (foundOffset !== -1 && foundOffset < 320) {
+      offset = foundOffset;
     }
 
     // Bolt optimization: Avoid Buffer.alloc and .toString('base64') which are expensive.

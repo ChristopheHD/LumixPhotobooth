@@ -45,8 +45,8 @@ class Controller {
       } else {
         console.log('Print successful callback.');
       }
-      this.setButtonState('Capture', false);
       this.captureButton.disabled = false;
+      this.captureButton.textContent = 'Capture';
       this.camera.startStream();
     });
 
@@ -59,36 +59,11 @@ class Controller {
           return;
         }
         e.preventDefault();
-
-        const spaceKey = document.getElementById('spaceKey');
-        if (spaceKey) {
-          spaceKey.classList.add('pressed');
-        }
-
         this.startCountdown();
       }
     });
 
-    window.addEventListener('keyup', (e) => {
-      if (e.code === 'Space') {
-        const spaceKey = document.getElementById('spaceKey');
-        if (spaceKey) {
-          spaceKey.classList.remove('pressed');
-        }
-      }
-    });
-
     this.render();
-  }
-
-  setButtonState(text, isLoading) {
-    if (!this.captureButton) return;
-
-    if (isLoading) {
-      this.captureButton.innerHTML = `<div class="spinner"></div> ${text}`;
-    } else {
-      this.captureButton.textContent = text;
-    }
   }
 
   startCountdown() {
@@ -98,7 +73,7 @@ class Controller {
     var count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState('Preparing...', true);
+      this.captureButton.textContent = 'Preparing...';
     }
 
     countdownElement.classList.remove('hidden');
@@ -188,12 +163,12 @@ class Controller {
 
   capture() {
     this.captureButton.disabled = true;
-    this.setButtonState('Capturing...', true);
+    this.captureButton.textContent = 'Capturing...';
 
     this.camera.capture((err, ok)=>{
       if(err){
         this.captureButton.disabled = false;
-        this.setButtonState('Capture', false);
+        this.captureButton.textContent = 'Capture';
         return;
       }
 
@@ -203,7 +178,7 @@ class Controller {
       }, (err, data)=>{
 
         this.captureButton.disabled = false;
-        this.setButtonState('Capture', false);
+        this.captureButton.textContent = 'Capture';
 
         if(err){
           console.error('Failed to download last photo from camera:', JSON.stringify(err, null, 2));
@@ -217,11 +192,11 @@ class Controller {
 
         if (global.AUTO_PRINT && filepath) {
           this.captureButton.disabled = true;
-          this.setButtonState('Printing...', true);
+          this.captureButton.textContent = 'Printing...';
           ipcRenderer.send('print-image', filepath);
         } else {
           this.captureButton.disabled = false;
-          this.setButtonState('Capture', false);
+          this.captureButton.textContent = 'Capture';
           this.camera.startStream();
         }
       }, 3);

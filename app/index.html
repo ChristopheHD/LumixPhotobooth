@@ -7,7 +7,15 @@
     <link rel="stylesheet" type="text/css" href="css/style.css" />
   </head>
   <body>
-    <div class="container">
+    <div id="wifi-screen" class="wifi-container">
+      <h1>Connect Camera</h1>
+      <p id="wifi-error" class="hidden error-text"></p>
+      <ul id="wifi-list" class="wifi-list">
+        <li>Searching for networks...</li>
+      </ul>
+    </div>
+
+    <div id="app-container" class="container hidden">
       <div class="viewport">
         <img id="preview" alt="Live camera preview" />
         <div id="countdown" class="overlay hidden" aria-live="assertive"></div>

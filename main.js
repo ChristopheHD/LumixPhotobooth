@@ -111,7 +111,7 @@ ipcMain.on('print-image', (event, imagePath) => {
         }
       });
     }).catch(err => {
-      console.error('Failed to get printers:', err);
+      console.error('Failed to get printers', err);
       printWindow.close();
       printWindow = null;
       if (mainWindow) {

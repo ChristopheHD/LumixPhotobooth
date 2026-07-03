@@ -74,7 +74,6 @@ class WifiSetup {
         return;
       }
 
-      this.wifiList.innerHTML = '';
       if (networks.length === 0) {
         this.wifiList.innerHTML = `<li>${i18n.t('noNetwork')}</li>`;
         return;
@@ -92,6 +91,12 @@ class WifiSetup {
           ssids.add(network.ssid);
           uniqueNetworks.push(network);
         }
+      }
+
+      this.wifiList.innerHTML = '';
+      if (uniqueNetworks.length === 0) {
+        this.wifiList.innerHTML = `<li>${i18n.t('noNetwork')}</li>`;
+        return;
       }
 
       uniqueNetworks.forEach((network) => {

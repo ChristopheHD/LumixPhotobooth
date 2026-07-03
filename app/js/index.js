@@ -36,4 +36,5 @@ if (document.readyState === 'loading') {
 
 new WifiSetup();
 
+
 })();

@@ -20,7 +20,7 @@ class LumixServer {
     this.activeBufferIndex = 0;
     this.imageLength = 0;
 
-    var self = this;
+    const self = this;
     this.socket.on('message', function (msg, rinfo) {
       self.messageHandler(msg, rinfo);
     });

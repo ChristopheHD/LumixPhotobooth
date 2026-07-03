@@ -30,15 +30,15 @@
       <img id="reviewImage" alt="Captured photo" />
       <div id="reviewControls" class="review-controls">
         <div class="review-btn-group">
-          <button id="printButton" class="review-btn print-btn">Print</button>
+          <button id="printButton" class="review-btn print-btn" aria-keyshortcuts="Enter">Print</button>
           <p class="shortcut-hint">Press <kbd id="enterKey" class="kbd-key">Enter</kbd> to print</p>
         </div>
         <div class="review-btn-group">
-          <button id="newPhotoButton" class="review-btn new-photo-btn">New Photo</button>
+          <button id="newPhotoButton" class="review-btn new-photo-btn" aria-keyshortcuts="Space">New Photo</button>
           <p class="shortcut-hint">Press <kbd id="reviewSpaceKey" class="kbd-key">Space</kbd> for new photo</p>
         </div>
       </div>
-      <div id="reviewStatus" class="review-status hidden">Printing...</div>
+      <div id="reviewStatus" class="review-status hidden" aria-live="polite"><div class="spinner"></div> Printing...</div>
     </div>
 
     <script src="js/index.js"></script>

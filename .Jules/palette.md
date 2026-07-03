@@ -13,3 +13,7 @@
 ## 2025-05-24 - Semantic Roles and Dynamic Status
 **Learning:** Custom interactive elements (like `<li>` elements acting as buttons) require `role="button"` and `tabIndex=0` to be fully accessible to screen readers, preventing them from being read as generic list items. Furthermore, wrapping dynamic status changes in a container with `aria-live="polite"` ensures visually impaired users are kept informed of background updates automatically.
 **Action:** Always verify custom interactive elements have correct semantic roles and use `aria-live` for status text that updates dynamically without user interaction.
+
+## 2026-07-01 - Correlating UI Hints with ARIA Shortcuts
+**Learning:** If the visual UI displays keyboard shortcut hints (like "Press Space for new photo"), screen reader users miss out on this discoverability if the programmatic `aria-keyshortcuts` attribute is absent on the corresponding interactive elements.
+**Action:** Always ensure that buttons with visible keyboard shortcut hints in the UI have a corresponding `aria-keyshortcuts` attribute to ensure parity between visual and auditory accessibility.

@@ -98,7 +98,6 @@ class Lumix {
 
         try {
           parseString(str, function (err, result) {
-
             cb(err, result);
           });
         }catch (e) {
@@ -180,7 +179,6 @@ class Lumix {
 
     _this.capturing = true;
     _this.sendLumix(recmode, function (err, result) {
-
       if (callback) {
         if (err) {
           _this.capturing = false;
@@ -205,7 +203,6 @@ class Lumix {
   }
 
   capture(callback) {
-
     let _this = this;
     if (_this.capturing) {
       if (callback) callback('Currently capturing');
@@ -214,7 +211,6 @@ class Lumix {
 
     _this.capturing = true;
     _this.sendLumix(recmode, function (err, result) {
-
       if (callback) {
         if (err) {
           _this.capturing = false;
@@ -242,7 +238,6 @@ class Lumix {
 
             if (result.camrply.state && result.camrply.state[0] && result.camrply.state[0].sd_access) {
               var sdAccess = result.camrply.state[0].sd_access == 'on';
-
 
               if (sdFlag && !sdAccess) {
                 //Done Writing
@@ -274,11 +269,9 @@ class Lumix {
   }
 
   getLastPhotoId(callback) {
-
     let _this = this;
     _this.downloading = true;
     _this.sendLumix(playmode, function (err, result) {
-
       if (err) {
         _this.downloading = false;
         return callback(err);
@@ -287,7 +280,6 @@ class Lumix {
       //Wait before getting content
       setTimeout(()=> {
         _this.sendLumix(get_content_info, function (err, result) {
-
           if (err) {
             _this.downloading = false;
             return callback(err);

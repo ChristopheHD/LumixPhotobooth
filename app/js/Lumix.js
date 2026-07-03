@@ -98,7 +98,6 @@ class Lumix {
 
         try {
           parseString(str, function (err, result) {
-            // console.log(JSON.stringify(result));
             cb(err, result);
           });
         }catch (e) {
@@ -180,7 +179,6 @@ class Lumix {
 
     _this.capturing = true;
     _this.sendLumix(recmode, function (err, result) {
-      // console.log('send lumix callback');
       if (callback) {
         if (err) {
           _this.capturing = false;
@@ -205,7 +203,6 @@ class Lumix {
   }
 
   capture(callback) {
-    // console.log('Capture');
     let _this = this;
     if (_this.capturing) {
       if (callback) callback('Currently capturing');
@@ -214,7 +211,6 @@ class Lumix {
 
     _this.capturing = true;
     _this.sendLumix(recmode, function (err, result) {
-      // console.log('send lumix callback');
       if (callback) {
         if (err) {
           _this.capturing = false;
@@ -243,7 +239,6 @@ class Lumix {
             if (result.camrply.state && result.camrply.state[0] && result.camrply.state[0].sd_access) {
               const sdAccess = result.camrply.state[0].sd_access == 'on';
 
-              // console.log('sd access: ', sdAccess, result.camrply.state[0].sd_access);
               if (sdFlag && !sdAccess) {
                 //Done Writing
                 _this.capturing = false;
@@ -274,11 +269,9 @@ class Lumix {
   }
 
   getLastPhotoId(callback) {
-    // console.log('Get last photo');
     let _this = this;
     _this.downloading = true;
     _this.sendLumix(playmode, function (err, result) {
-      // console.log('Play mode result', err, result);
       if (err) {
         _this.downloading = false;
         return callback(err);
@@ -287,7 +280,6 @@ class Lumix {
       //Wait before getting content
       setTimeout(()=> {
         _this.sendLumix(get_content_info, function (err, result) {
-          // console.log('get content info result', err, result);
           if (err) {
             _this.downloading = false;
             return callback(err);
@@ -295,15 +287,6 @@ class Lumix {
 
           const contentNumber = parseInt(result.camrply.total_content_number[0]);
           callback(null, contentNumber);
-          // setTimeout(function () {
-          //   //DL DO DT prefixes for files
-          //   const jpgUrl = '/DL100' +  + '.jpg';
-          //   console.log(jpgUrl);
-          //   _this.getBinary(jpgUrl, function (err, result) {
-          //     _this.downloading = false;
-          //     return callback(err, result);
-          //   });
-          // }, 3000);
         });
       }, 500);
     });

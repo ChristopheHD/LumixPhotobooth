@@ -1,11 +1,11 @@
 'use strict';
 
-var http = require('http');
-var parseString = require('xml2js').parseString;
+const http = require('http');
+const parseString = require('xml2js').parseString;
 
-var LumixServer = require('./LumixServer');
+const LumixServer = require('./LumixServer');
 
-var lumixAddress = '192.168.54.1';
+const lumixAddress = '192.168.54.1';
 const deviceName = 'DMC-G7';
 const deviceId = '4D454930-0100-1000-8000-F02765BACACE';
 
@@ -42,7 +42,7 @@ class Lumix {
 
   getRequest(path, cb, bin) {
     try {
-      var options = {
+      const options = {
         host: lumixAddress,
         port: (bin ? 50001 : 80),
         path: path,
@@ -54,26 +54,26 @@ class Lumix {
         }
         if (cb) {
           if (bin) {
-            var binData = [];
+            const binData = [];
             response.on('data', function (chunk) {
               binData.push(chunk);
             }).on('end', function () {
-              var buffer = Buffer.concat(binData);
+              const buffer = Buffer.concat(binData);
               cb(null, buffer);
             });
           }else {
-            var textData = [];
+            const textData = [];
             response.on('data', function (chunk) {
               textData.push(chunk);
             }).on('end', function () {
-              var str = Buffer.concat(textData).toString('utf8');
+              const str = Buffer.concat(textData).toString('utf8');
               cb(null, str);
             });
           }
         }
       };
 
-      var req = http.request(options, callback);
+      const req = http.request(options, callback);
       req.on('error', function (err) {
         console.log('HTTP Request Failed for', options.path, ':', err.message);
         cb(err);
@@ -225,15 +225,15 @@ class Lumix {
         _this.sendLumix(capture);
 
         //Change this to set interval to check for 5 seconds
-        var maxTime = 6000;
-        var checkFrequency = 70;
-        var sdFlag = false;
+        const maxTime = 6000;
+        const checkFrequency = 70;
+        let sdFlag = false;
 
-        var timeStart = Date.now();
+        const timeStart = Date.now();
 
         //check with timer instead of attempts here
 
-        var checkImageCount = function () {
+        const checkImageCount = function () {
           _this.sendLumix(getstate, function (err, result) {
             if (err) {
               _this.capturing = false;
@@ -241,7 +241,7 @@ class Lumix {
             }
 
             if (result.camrply.state && result.camrply.state[0] && result.camrply.state[0].sd_access) {
-              var sdAccess = result.camrply.state[0].sd_access == 'on';
+              const sdAccess = result.camrply.state[0].sd_access == 'on';
 
               // console.log('sd access: ', sdAccess, result.camrply.state[0].sd_access);
               if (sdFlag && !sdAccess) {
@@ -293,11 +293,11 @@ class Lumix {
             return callback(err);
           }
 
-          var contentNumber = parseInt(result.camrply.total_content_number[0]);
+          const contentNumber = parseInt(result.camrply.total_content_number[0]);
           callback(null, contentNumber);
           // setTimeout(function () {
           //   //DL DO DT prefixes for files
-          //   var jpgUrl = '/DL100' +  + '.jpg';
+          //   const jpgUrl = '/DL100' +  + '.jpg';
           //   console.log(jpgUrl);
           //   _this.getBinary(jpgUrl, function (err, result) {
           //     _this.downloading = false;
@@ -325,7 +325,7 @@ class Lumix {
             return callback(err);
           }
 
-          var totalContentNumber = parseInt(result.camrply.total_content_number[0]);
+          const totalContentNumber = parseInt(result.camrply.total_content_number[0]);
           // Browse last content (index is 0-based in some implementations, but lumix.c uses total-1)
           _this.browseContent(totalContentNumber - 1, 1, (err, didl) => {
             if (err) {

@@ -1,18 +1,18 @@
 'use strict';
 require('./config');
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 const { ipcRenderer } = require('electron');
-var Lumix = require('./Lumix');
+const Lumix = require('./Lumix');
 
-var previewImage = document.querySelector('#preview');
-var captureButton = document.querySelector('#captureButton');
-var countdownElement = document.querySelector('#countdown');
-var flashElement = document.querySelector('#flash');
+const previewImage = document.querySelector('#preview');
+const captureButton = document.querySelector('#captureButton');
+const countdownElement = document.querySelector('#countdown');
+const flashElement = document.querySelector('#flash');
 
 class Controller {
   constructor() {
-    var camera = new Lumix();
+    const camera = new Lumix();
 
     camera.initialize();
     camera.startStream();
@@ -127,7 +127,7 @@ class Controller {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
-    var count = 3;
+    let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
       this.setButtonState('Preparing...', true);
@@ -139,7 +139,7 @@ class Controller {
     countdownElement.classList.add('pulse-animation');
     countdownElement.textContent = count;
 
-    var interval = setInterval(() => {
+    const interval = setInterval(() => {
       count--;
       if (count > 0) {
         countdownElement.textContent = count;

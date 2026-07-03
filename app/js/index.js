@@ -1,3 +1,3 @@
 'use strict';
-var WifiSetup = require('./js/WifiSetup');
+const WifiSetup = require('./js/WifiSetup');
 new WifiSetup();

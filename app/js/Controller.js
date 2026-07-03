@@ -203,16 +203,26 @@ class Controller {
 
         // Update image source
         const oldUrl = this.currentUrl;
+
+        // Bolt optimization: Use onload/onerror to apply backpressure to the render loop.
+        // This drops intermediate frames if the UDP stream outpaces the browser's decode/render cycle,
+        // preventing memory leaks, decoding backlogs, and CPU churn on constrained hardware.
+        const releaseLock = () => {
+          if (oldUrl) {
+            URL.revokeObjectURL(oldUrl);
+          }
+          this.isUpdating = false;
+          this.previewImage.onload = null;
+          this.previewImage.onerror = null;
+        };
+
+        this.previewImage.onload = releaseLock;
+        this.previewImage.onerror = releaseLock;
+
         this.previewImage.src = url;
         this.currentUrl = url;
-
-        // Revoke old URL to free memory after the new image starts loading
-        if (oldUrl) {
-          URL.revokeObjectURL(oldUrl);
-        }
       } catch (e) {
         console.error('Error updating preview image:', e);
-      } finally {
         this.isUpdating = false;
       }
     }

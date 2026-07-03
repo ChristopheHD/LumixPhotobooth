@@ -12,3 +12,7 @@
 ## 2024-05-24 - Unused UI libraries in constrained environments
 **Learning:** Having `var $ = require('jquery');` in a file like `Controller.js`, even if totally unused, forces Electron/Node to read, parse, and execute the entire library synchronously during app startup, causing measurable delay on constrained hardware.
 **Action:** Always manually audit `require()` statements to ensure no unused large libraries are included, even if a tree-shaker isn't present to do it automatically.
+
+## 2024-05-25 - [Image Rendering Backpressure on Constrained Hardware]
+**Learning:** Pushing high-frequency UDP frames (e.g. 60fps) into `img.src` synchronously via `URL.createObjectURL` without waiting for the browser to decode/paint causes severe queueing, memory churn (from unreleased Blobs/URLs), and CPU spikes as the browser struggles to keep up.
+**Action:** Use `img.onload` and `img.onerror` to defer setting the lock flag (`isUpdating = false`) and revoking the old object URL. This naturally throttles the render loop to the browser's actual decoding capability, dropping unneeded intermediate frames.

@@ -129,7 +129,7 @@ class Controller {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
-    let count = 3;
+    let count = 5;
     if (this.captureButton) {
       this.captureButton.disabled = true;
       this.setButtonState(i18n.t('preparing'), true);

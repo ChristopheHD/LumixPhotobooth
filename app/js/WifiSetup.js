@@ -1,8 +1,8 @@
 'use strict';
 const wifi = require('node-wifi');
 const Controller = require('./Controller');
-const i18n = require('./i18n');
 
+const i18n = require('./i18n');
 class WifiSetup {
   constructor() {
     this.wifiScreen = document.getElementById('wifi-screen');

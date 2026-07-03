@@ -1,7 +1,9 @@
 const i18next = require('i18next');
 const fs = require('fs');
 const path = require('path');
-require('./config'); // ensure global.LANGUAGE is loaded
+require('./config');
+// ensure global.LANGUAGE is loaded
+
 
 const loadLocales = () => {
   const localesPath = path.join(__dirname, '..', 'locales');
@@ -29,7 +31,9 @@ const loadLocales = () => {
 };
 
 i18next.init({
+  lng: global.LANGUAGE || 'en',
   initImmediate: false,
+  preload: [global.LANGUAGE || 'en'],
   lng: global.LANGUAGE || 'en',
   fallbackLng: 'en',
   resources: loadLocales()

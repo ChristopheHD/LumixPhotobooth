@@ -1,7 +1,5 @@
 'use strict';
 require('./config');
-const i18n = require('./i18n');
-const i18n = require('./i18n');
 
 const fs = require('fs');
 const path = require('path');
@@ -13,6 +11,7 @@ const captureButton = document.querySelector('#captureButton');
 const countdownElement = document.querySelector('#countdown');
 const flashElement = document.querySelector('#flash');
 
+const i18n = require('./i18n');
 class Controller {
   constructor() {
     const camera = new Lumix();

@@ -1,3 +1,5 @@
+(function() {
+require('./js/config');
 'use strict';
 
 const WifiSetup = require('./js/WifiSetup');
@@ -5,7 +7,9 @@ const i18n = require('./js/i18n');
 
 
 // Apply initial translations to the DOM
+
 const applyTranslations = () => {
+i18n.changeLanguage(global.LANGUAGE || 'en');
   document.querySelector('#wifi-screen h1').textContent = i18n.t('connectCamera');
 
   const wifiListSearch = document.querySelector('#wifi-list li');
@@ -31,3 +35,5 @@ if (document.readyState === 'loading') {
 }
 
 new WifiSetup();
+
+})();

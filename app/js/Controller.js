@@ -1,5 +1,8 @@
 'use strict';
 require('./config');
+const i18n = require('./i18n');
+const i18n = require('./i18n');
+
 const fs = require('fs');
 const path = require('path');
 const { ipcRenderer } = require('electron');
@@ -130,7 +133,7 @@ class Controller {
     let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState('Preparing...', true);
+      this.setButtonState(i18n.t('preparing'), true);
     }
 
     countdownElement.classList.remove('hidden');
@@ -230,12 +233,12 @@ class Controller {
 
   capture() {
     this.captureButton.disabled = true;
-    this.setButtonState('Capturing...', true);
+    this.setButtonState(i18n.t('capturing'), true);
 
     this.camera.capture((err, ok)=>{
       if(err){
         this.captureButton.disabled = false;
-        this.setButtonState('Capture', false);
+        this.setButtonState(i18n.t('capture'), false);
         return;
       }
 
@@ -245,7 +248,7 @@ class Controller {
       }, (err, data)=>{
 
         this.captureButton.disabled = false;
-        this.setButtonState('Capture', false);
+        this.setButtonState(i18n.t('capture'), false);
 
         if(err){
           console.error('Failed to download last photo from camera:', JSON.stringify(err, null, 2));
@@ -322,7 +325,7 @@ class Controller {
     this.currentPrintFilepath = null;
 
     // Reset buttons state
-    this.setButtonState('Capture', false);
+    this.setButtonState(i18n.t('capture'), false);
     this.captureButton.disabled = false;
 
     // Restart stream

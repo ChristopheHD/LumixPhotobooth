@@ -1,6 +1,7 @@
 'use strict';
 const wifi = require('node-wifi');
 const Controller = require('./Controller');
+const i18n = require('./i18n');
 
 class WifiSetup {
   constructor() {
@@ -54,7 +55,7 @@ class WifiSetup {
 
     // Only show "Searching..." if the list is completely empty
     if (this.wifiList.children.length === 0) {
-      this.wifiList.innerHTML = '<li><div class="spinner"></div> Searching for networks...</li>';
+      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${i18n.t('searching')}</li>`;
     }
 
     wifi.scan((error, networks) => {
@@ -67,7 +68,7 @@ class WifiSetup {
       if (this.isConnecting) return;
       if (error) {
         console.error('Error during Wi-Fi scan:', error);
-        this.wifiError.textContent = 'Error searching for Wi-Fi networks.';
+        this.wifiError.textContent = i18n.t('errorSearching');
         this.wifiError.classList.remove('hidden');
         this.wifiList.innerHTML = '';
         return;
@@ -75,7 +76,7 @@ class WifiSetup {
 
       this.wifiList.innerHTML = '';
       if (networks.length === 0) {
-        this.wifiList.innerHTML = '<li>No network found</li>';
+        this.wifiList.innerHTML = `<li>${i18n.t('noNetwork')}</li>`;
         return;
       }
 
@@ -117,13 +118,13 @@ class WifiSetup {
   connect(ssid) {
     this.isConnecting = true;
     this.stopScanning();
-    this.wifiList.innerHTML = `<li><div class="spinner"></div> Connecting to ${ssid}...</li>`;
+    this.wifiList.innerHTML = `<li><div class="spinner"></div> ${i18n.t('connecting', {ssid})}</li>`;
     this.wifiError.classList.add('hidden');
 
     wifi.connect({ ssid: ssid }, (error) => {
       if (error) {
         console.error(`Connection error to ${ssid}:`, error);
-        this.wifiError.textContent = `Connection error to ${ssid}. Please try again.`;
+        this.wifiError.textContent = i18n.t('connectionError', {ssid});
         this.wifiError.classList.remove('hidden');
         this.isConnecting = false;
         this.startScanning(); // Refresh the list and resume background scan
@@ -131,7 +132,7 @@ class WifiSetup {
       }
 
       console.log(`Connected to ${ssid}. Waiting for camera...`);
-      this.wifiList.innerHTML = `<li><div class="spinner"></div> Waiting for camera...</li>`;
+      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${i18n.t('waitingForCamera')}</li>`;
       this.waitForCamera();
     });
   }
@@ -155,7 +156,7 @@ class WifiSetup {
       }).on('error', (err) => {
         if (attempts >= maxAttempts) {
           console.error('Failed to reach camera after Wi-Fi connection.');
-          this.wifiError.textContent = 'Wi-Fi connected successfully, but camera is unreachable.';
+          this.wifiError.textContent = i18n.t('cameraUnreachable');
           this.wifiError.classList.remove('hidden');
           this.isConnecting = false;
           this.startScanning();

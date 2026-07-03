@@ -83,24 +83,39 @@ ipcMain.on('print-image', (event, imagePath) => {
       return;
     }
 
-    printWindow.webContents.print({
-      silent: true,
-      printBackground: true,
-      deviceName: '', // Default printer
-      landscape: true,
-      margins: {
-        marginType: 'none'
+    printWindow.webContents.getPrintersAsync().then((printers) => {
+      let printOptions = {
+        silent: true,
+        printBackground: true,
+        landscape: true,
+        margins: {
+          marginType: 'none'
+        }
+      };
+
+      const defaultPrinter = printers.find(p => p.isDefault) || printers[0];
+      if (defaultPrinter && defaultPrinter.name) {
+         printOptions.deviceName = defaultPrinter.name;
       }
-    }, (success, failureReason) => {
-      if (!success) {
-        console.error('Print failed:', failureReason);
-      } else {
-        console.log('Print job sent successfully.');
-      }
+
+      printWindow.webContents.print(printOptions, (success, failureReason) => {
+        if (!success) {
+          console.error('Print failed:', failureReason);
+        } else {
+          console.log('Print job sent successfully.');
+        }
+        printWindow.close();
+        printWindow = null;
+        if (mainWindow) {
+          mainWindow.webContents.send('print-finished', success, failureReason);
+        }
+      });
+    }).catch(err => {
+      console.error('Failed to get printers:', err);
       printWindow.close();
       printWindow = null;
       if (mainWindow) {
-        mainWindow.webContents.send('print-finished', success, failureReason);
+        mainWindow.webContents.send('print-finished', false, err.message);
       }
     });
   });

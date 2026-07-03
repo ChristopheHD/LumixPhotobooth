@@ -8,6 +8,13 @@ body {
   text-align: center;
 }
 
+.cursor-hidden {
+  cursor: none !important;
+}
+.cursor-hidden * {
+  cursor: none !important;
+}
+
 .container {
   display: flex;
   flex-direction: column;

@@ -85,7 +85,11 @@ class WifiSetup {
       for (const network of networks) {
         // Only show networks without a password (Lumix networks are open)
         // Some platforms report 'none', '', or 'Open' for no security
-        const isSecure = network.security && network.security.toLowerCase() !== 'none' && network.security.toLowerCase() !== 'open' && network.security !== '';
+        let isSecure = false;
+        if (network.security) {
+          const securityLower = network.security.toLowerCase();
+          isSecure = securityLower !== 'none' && securityLower !== 'open' && network.security !== '';
+        }
 
         if (network.ssid && !isSecure && !ssids.has(network.ssid)) {
           ssids.add(network.ssid);

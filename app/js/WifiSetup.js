@@ -54,7 +54,7 @@ class WifiSetup {
 
     // Only show "Searching..." if the list is completely empty
     if (this.wifiList.children.length === 0) {
-      this.wifiList.innerHTML = '<li>Searching for networks...</li>';
+      this.wifiList.innerHTML = '<li><div class="spinner"></div> Searching for networks...</li>';
     }
 
     wifi.scan((error, networks) => {
@@ -117,7 +117,7 @@ class WifiSetup {
   connect(ssid) {
     this.isConnecting = true;
     this.stopScanning();
-    this.wifiList.innerHTML = `<li>Connecting to ${ssid}...</li>`;
+    this.wifiList.innerHTML = `<li><div class="spinner"></div> Connecting to ${ssid}...</li>`;
     this.wifiError.classList.add('hidden');
 
     wifi.connect({ ssid: ssid }, (error) => {
@@ -131,7 +131,7 @@ class WifiSetup {
       }
 
       console.log(`Connected to ${ssid}. Waiting for camera...`);
-      this.wifiList.innerHTML = `<li>Waiting for camera...</li>`;
+      this.wifiList.innerHTML = `<li><div class="spinner"></div> Waiting for camera...</li>`;
       this.waitForCamera();
     });
   }

@@ -17,3 +17,6 @@
 ## 2026-07-01 - Correlating UI Hints with ARIA Shortcuts
 **Learning:** If the visual UI displays keyboard shortcut hints (like "Press Space for new photo"), screen reader users miss out on this discoverability if the programmatic `aria-keyshortcuts` attribute is absent on the corresponding interactive elements.
 **Action:** Always ensure that buttons with visible keyboard shortcut hints in the UI have a corresponding `aria-keyshortcuts` attribute to ensure parity between visual and auditory accessibility.
+## 2025-05-24 - Visual Async Feedback in Photobooth UIs
+**Learning:** In highly physical or constrained environments, textual status updates (like "Searching..." or "Capturing...") may not provide enough visual feedback that an application is actively working, potentially leading to user frustration.
+**Action:** When a button or container goes into a loading or waiting state for a hardware/network action, provide a continuously animated visual cue (like a `.spinner`) alongside the text to clearly indicate ongoing background processing.

@@ -1,6 +1,5 @@
 'use strict';
-const wifi = require('node-wifi');
-const Controller = require('./Controller');
+
 
 class WifiSetup {
   constructor() {
@@ -9,10 +8,6 @@ class WifiSetup {
     this.wifiList = document.getElementById('wifi-list');
     this.wifiError = document.getElementById('wifi-error');
 
-    wifi.init({
-      iface: null // network interface, choose a random one if null
-    });
-
     this.isConnecting = false;
     this.isScanning = false;
     this.scanTimeout = null;
@@ -20,20 +15,14 @@ class WifiSetup {
     this.checkInitialConnection();
   }
 
-  checkInitialConnection() {
-    const http = require('http');
-    const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
-      // Camera is already reachable, skip Wi-Fi setup
+  async checkInitialConnection() {
+    const isConnected = await window.api.wifiCheckInitial();
+    if (isConnected) {
       console.log('Camera already connected on startup.');
       this.startApp();
-    }).on('error', (err) => {
-      // Camera is not reachable, start Wi-Fi setup
+    } else {
       this.startScanning();
-    });
-
-    req.setTimeout(1000, () => {
-      req.destroy();
-    });
+    }
   }
 
   startScanning() {
@@ -49,29 +38,21 @@ class WifiSetup {
     }
   }
 
-  scan() {
+  async scan() {
     if (this.isConnecting || !this.isScanning) return;
 
-    // Only show "Searching..." if the list is completely empty
     if (this.wifiList.children.length === 0) {
       this.wifiList.innerHTML = '<li><div class="spinner"></div> Searching for networks...</li>';
     }
 
-    wifi.scan((error, networks) => {
-      // Bolt optimization: Schedule next scan only AFTER current scan completes.
-      // This prevents CPU spin and child process accumulation from overlapping OS network scans.
+    try {
+      const networks = await window.api.wifiScan();
+
       if (this.isScanning && !this.isConnecting) {
-        this.scanTimeout = setTimeout(() => this.scan(), 2000); // 2 second delay between scans
+        this.scanTimeout = setTimeout(() => this.scan(), 2000);
       }
 
       if (this.isConnecting) return;
-      if (error) {
-        console.error('Error during Wi-Fi scan:', error);
-        this.wifiError.textContent = 'Error searching for Wi-Fi networks.';
-        this.wifiError.classList.remove('hidden');
-        this.wifiList.innerHTML = '';
-        return;
-      }
 
       this.wifiList.innerHTML = '';
       if (networks.length === 0) {
@@ -79,28 +60,10 @@ class WifiSetup {
         return;
       }
 
-      // Deduplicate networks by SSID and filter for open networks only
-      const uniqueNetworks = [];
-      const ssids = new Set();
-      for (const network of networks) {
-        // Only show networks without a password (Lumix networks are open)
-        // Some platforms report 'none', '', or 'Open' for no security
-        let isSecure = false;
-        if (network.security) {
-          const securityLower = network.security.toLowerCase();
-          isSecure = securityLower !== 'none' && securityLower !== 'open' && network.security !== '';
-        }
-
-        if (network.ssid && !isSecure && !ssids.has(network.ssid)) {
-          ssids.add(network.ssid);
-          uniqueNetworks.push(network);
-        }
-      }
-
-      uniqueNetworks.forEach((network) => {
+      networks.forEach((network) => {
         const li = document.createElement('li');
         li.textContent = network.ssid;
-        li.tabIndex = 0; // Make it focusable for keyboard navigation
+        li.tabIndex = 0;
         li.setAttribute('role', 'button');
 
         const connectHandler = () => this.connect(network.ssid);
@@ -115,48 +78,54 @@ class WifiSetup {
 
         this.wifiList.appendChild(li);
       });
-    });
+    } catch (error) {
+      if (this.isScanning && !this.isConnecting) {
+        this.scanTimeout = setTimeout(() => this.scan(), 2000);
+      }
+
+      if (this.isConnecting) return;
+
+      console.error('Error during Wi-Fi scan:', error);
+      this.wifiError.textContent = 'Error searching for Wi-Fi networks.';
+      this.wifiError.classList.remove('hidden');
+      this.wifiList.innerHTML = '';
+    }
   }
 
-  connect(ssid) {
+  async connect(ssid) {
     this.isConnecting = true;
     this.stopScanning();
     this.wifiList.innerHTML = `<li><div class="spinner"></div> Connecting to ${ssid}...</li>`;
     this.wifiError.classList.add('hidden');
 
-    wifi.connect({ ssid: ssid }, (error) => {
-      if (error) {
-        console.error(`Connection error to ${ssid}:`, error);
-        this.wifiError.textContent = `Connection error to ${ssid}. Please try again.`;
-        this.wifiError.classList.remove('hidden');
-        this.isConnecting = false;
-        this.startScanning(); // Refresh the list and resume background scan
-        return;
-      }
-
+    try {
+      await window.api.wifiConnect(ssid);
       console.log(`Connected to ${ssid}. Waiting for camera...`);
       this.wifiList.innerHTML = `<li><div class="spinner"></div> Waiting for camera...</li>`;
       this.waitForCamera();
-    });
+    } catch (error) {
+      console.error(`Connection error to ${ssid}:`, error);
+      this.wifiError.textContent = `Connection error to ${ssid}. Please try again.`;
+      this.wifiError.classList.remove('hidden');
+      this.isConnecting = false;
+      this.startScanning();
+    }
   }
 
-  waitForCamera() {
-    const http = require('http');
+  async waitForCamera() {
     let attempts = 0;
-    const maxAttempts = 15; // Max 15 attempts, at ~1000ms each, ~15 seconds total
+    const maxAttempts = 15;
 
-    const checkCamera = () => {
+    const checkCamera = async () => {
       attempts++;
-      const req = http.get('http://192.168.54.1:60606/Server0/CDS_control', (res) => {
-        // Any response means the camera is reachable
-        console.log('Camera detected! Waiting for stabilization...');
+      const isConnected = await window.api.wifiCheckInitial();
 
-        // Wait an additional 2 seconds before initializing commands to let the camera settle
+      if (isConnected) {
+        console.log('Camera detected! Waiting for stabilization...');
         setTimeout(() => {
           this.startApp();
         }, 2000);
-
-      }).on('error', (err) => {
+      } else {
         if (attempts >= maxAttempts) {
           console.error('Failed to reach camera after Wi-Fi connection.');
           this.wifiError.textContent = 'Wi-Fi connected successfully, but camera is unreachable.';
@@ -166,12 +135,7 @@ class WifiSetup {
           return;
         }
         setTimeout(checkCamera, 1000);
-      });
-
-      // Add timeout to request
-      req.setTimeout(1000, () => {
-        req.destroy();
-      });
+      }
     };
 
     checkCamera();
@@ -184,4 +148,3 @@ class WifiSetup {
   }
 }
 
-module.exports = WifiSetup;

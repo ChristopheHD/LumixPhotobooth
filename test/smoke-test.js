@@ -6,9 +6,9 @@ const files = [
   'app/index.html',
   'app/js/index.js',
   'app/js/Controller.js',
-  'app/js/Lumix.js',
-  'app/js/LumixServer.js',
-  'app/js/config.js'
+  'backend/Lumix.js',
+  'backend/LumixServer.js',
+  'backend/config.js'
 ];
 
 console.log('Running smoke test...');

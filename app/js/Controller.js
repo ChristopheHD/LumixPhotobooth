@@ -117,7 +117,7 @@ class Controller {
     let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState('Preparing...', true);
+      this.setButtonState(window.i18n ? window.i18n.t('preparing') : 'Preparing...', true);
     }
 
     countdownElement.classList.remove('hidden');
@@ -191,19 +191,19 @@ class Controller {
 
   async capture() {
     this.captureButton.disabled = true;
-    this.setButtonState('Capturing...', true);
+    this.setButtonState(window.i18n ? window.i18n.t('capturing') : 'Capturing...', true);
 
     try {
       const { filepath, data } = await window.api.cameraCapture();
 
       this.captureButton.disabled = false;
-      this.setButtonState('Capture', false);
+      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
 
       this.showReviewScreen(data, filepath);
     } catch (err) {
       console.error('Capture failed:', err);
       this.captureButton.disabled = false;
-      this.setButtonState('Capture', false);
+      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
     }
   }
 
@@ -263,7 +263,7 @@ class Controller {
     this.currentPrintFilepath = null;
 
     // Reset buttons state
-    this.setButtonState('Capture', false);
+    this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
     this.captureButton.disabled = false;
 
     // Restart stream
@@ -271,3 +271,4 @@ class Controller {
   }
 }
 
+window.Controller = Controller;

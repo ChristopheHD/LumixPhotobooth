@@ -151,7 +151,8 @@ class MainController {
 
     ipcMain.handle('get-config', () => {
       return {
-        PRINT: global.PRINT
+        PRINT: global.PRINT,
+        LANGUAGE: global.LANGUAGE
       };
     });
   }

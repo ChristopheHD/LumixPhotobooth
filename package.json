@@ -40,6 +40,9 @@
     "through2": "^5.0.4"
   },
   "dependencies": {
+    "i18next": "^26.3.4",
+    "i18next-fs-backend": "^2.6.6",
+    "i18next-sync-fs-backend": "^1.1.1",
     "jquery": "^4.0.0",
     "node-wifi": "^2.0.16",
     "xml2js": "^0.6.2"

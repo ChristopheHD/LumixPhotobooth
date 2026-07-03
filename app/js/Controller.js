@@ -242,7 +242,7 @@ class Controller {
       // Attempt to download last photo taken
       this.attempt((cb) => {
         this.camera.getLastPhoto(cb);
-      }, (err, data)=>{
+      }, async (err, data)=>{
 
         this.captureButton.disabled = false;
         this.setButtonState('Capture', false);
@@ -255,7 +255,7 @@ class Controller {
 
         // Save photo
         console.log('Photo downloaded from camera, starting browser download...');
-        const filepath = this.downloadImage(data);
+        const filepath = await this.downloadImage(data);
 
         if (filepath) {
           this.showReviewScreen(data, filepath);
@@ -329,7 +329,7 @@ class Controller {
     this.camera.startStream();
   }
 
-  downloadImage(data) {
+  async downloadImage(data) {
     const now = new Date();
     const timestamp = now.getFullYear() +
       String(now.getMonth() + 1).padStart(2, '0') +
@@ -342,12 +342,10 @@ class Controller {
     const capturesDir = path.join(__dirname, '..', 'captures');
 
     try {
-      if (!fs.existsSync(capturesDir)) {
-        fs.mkdirSync(capturesDir, { recursive: true });
-      }
+      await fs.promises.mkdir(capturesDir, { recursive: true });
 
       const filepath = path.join(capturesDir, filename);
-      fs.writeFileSync(filepath, data);
+      await fs.promises.writeFile(filepath, data);
       console.log(`Photo saved successfully to: ${filepath}`);
       return filepath;
     } catch (e) {

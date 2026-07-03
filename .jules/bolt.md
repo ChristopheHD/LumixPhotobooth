@@ -16,3 +16,6 @@
 ## 2024-05-25 - [Image Rendering Backpressure on Constrained Hardware]
 **Learning:** Pushing high-frequency UDP frames (e.g. 60fps) into `img.src` synchronously via `URL.createObjectURL` without waiting for the browser to decode/paint causes severe queueing, memory churn (from unreleased Blobs/URLs), and CPU spikes as the browser struggles to keep up.
 **Action:** Use `img.onload` and `img.onerror` to defer setting the lock flag (`isUpdating = false`) and revoking the old object URL. This naturally throttles the render loop to the browser's actual decoding capability, dropping unneeded intermediate frames.
+## 2024-05-24 - Avoid Redundant String Methods in Loops
+**Learning:** Calling `.toLowerCase()` repeatedly on the same string within a tight loop creates unnecessary string allocations and CPU overhead, especially when short-circuiting logical operators still evaluate the method multiple times.
+**Action:** When evaluating multiple conditions against a transformed string (e.g., lowercased values), cache the transformed result in a local variable before performing the comparisons.

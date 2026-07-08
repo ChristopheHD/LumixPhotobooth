@@ -88,7 +88,8 @@ ipcMain.on('print-image', (event, imagePath) => {
     printWindow.webContents.printToPDF({
       landscape: true,
       printBackground: true,
-      margins: { top: 0, bottom: 0, left: 0, right: 0 }
+      preferCSSPageSize: true, // IMPORTANT: Forces CSS @page rules to be respected
+      margins: { marginType: 'none', top: 0, bottom: 0, left: 0, right: 0 }
     }).then(data => {
       const fs = require('fs');
       const os = require('os');
@@ -97,7 +98,8 @@ ipcMain.on('print-image', (event, imagePath) => {
       // Write the PDF
       fs.promises.writeFile(tempPdfPath, data).then(() => {
         const { exec } = require('child_process');
-        exec('lp "' + tempPdfPath + '"', (error, stdout, stderr) => {
+        // Tell lp to completely fill the page without hardware margins
+        exec('lp -o fit-to-page -o media=Custom.10x15cm -o page-bottom=0 -o page-left=0 -o page-right=0 -o page-top=0 "' + tempPdfPath + '"', (error) => {
            if (error) {
              console.error('Print failed via lp:', error);
              if (mainWindow) mainWindow.webContents.send('print-finished', false, error.message);

@@ -88,7 +88,8 @@ ipcMain.on('print-image', (event, imagePath) => {
     printWindow.webContents.printToPDF({
       landscape: true,
       printBackground: true,
-      preferCSSPageSize: true, // IMPORTANT: Forces CSS @page rules to be respected
+      preferCSSPageSize: false,
+      pageSize: { width: 6, height: 4 }, // 15x10 cm equivalent in inches (landscape)
       margins: { marginType: 'none', top: 0, bottom: 0, left: 0, right: 0 }
     }).then(data => {
       const fs = require('fs');

@@ -110,14 +110,14 @@ class Controller {
     }
   }
 
-  startCountdown() {
+  async startCountdown() {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
-    let count = 5;
+    let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState(window.i18n ? window.i18n.t('preparing') : 'Preparing...', true);
+      this.setButtonState(await window.api.getTranslation('preparing'), true);
     }
 
     countdownElement.classList.remove('hidden');
@@ -191,19 +191,19 @@ class Controller {
 
   async capture() {
     this.captureButton.disabled = true;
-    this.setButtonState(window.i18n ? window.i18n.t('capturing') : 'Capturing...', true);
+    this.setButtonState(await window.api.getTranslation('capturing'), true);
 
     try {
       const { filepath, data } = await window.api.cameraCapture();
 
       this.captureButton.disabled = false;
-      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+      this.setButtonState(await window.api.getTranslation('capture'), false);
 
       this.showReviewScreen(data, filepath);
     } catch (err) {
       console.error('Capture failed:', err);
       this.captureButton.disabled = false;
-      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+      this.setButtonState(await window.api.getTranslation('capture'), false);
     }
   }
 
@@ -250,7 +250,7 @@ class Controller {
     window.api.printImage(this.currentPrintFilepath);
   }
 
-  closeReviewScreen() {
+  async closeReviewScreen() {
     this.isReviewActive = false;
     this.reviewScreen.classList.add('hidden');
 
@@ -263,7 +263,7 @@ class Controller {
     this.currentPrintFilepath = null;
 
     // Reset buttons state
-    this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+    this.setButtonState(await window.api.getTranslation('capture'), false);
     this.captureButton.disabled = false;
 
     // Restart stream

@@ -7,6 +7,7 @@ const Lumix = require('./Lumix');
 const fs = require('fs');
 const path = require('path');
 require('./config');
+const i18n = require('./i18n');
 
 class MainController {
   constructor(mainWindow) {
@@ -154,6 +155,10 @@ class MainController {
         PRINT: global.PRINT,
         LANGUAGE: global.LANGUAGE
       };
+    });
+
+    ipcMain.handle('get-translation', (event, key, options) => {
+      return i18n.t(key, options);
     });
   }
 

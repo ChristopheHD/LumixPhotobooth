@@ -1,30 +1,25 @@
 'use strict';
 
 const applyTranslations = async () => {
-  const config = await window.api.getConfig();
-  const language = config.LANGUAGE || 'en';
-  // i18n module is loaded from global script
-  if (window.i18n) {
-    window.i18n.changeLanguage(language);
-    document.querySelector('#wifi-screen h1').textContent = window.i18n.t('connectCamera');
+  document.querySelector('#wifi-screen h1').textContent = await window.api.getTranslation('connectCamera');
 
-    const wifiListSearch = document.querySelector('#wifi-list li');
-    if (wifiListSearch) {
-      wifiListSearch.innerHTML = `<div class="spinner"></div> ${window.i18n.t('searching')}`;
-    }
-
-    document.querySelector('#captureButton').textContent = window.i18n.t('capture');
-    document.querySelector('.shortcut-hint').innerHTML = window.i18n.t('pressSpaceToTake');
-
-    document.querySelector('#printButton').textContent = window.i18n.t('print');
-    document.querySelectorAll('.shortcut-hint')[1].innerHTML = window.i18n.t('pressEnterToPrint');
-
-    document.querySelector('#newPhotoButton').textContent = window.i18n.t('newPhoto');
-    document.querySelectorAll('.shortcut-hint')[2].innerHTML = window.i18n.t('pressSpaceForNew');
-
-    document.querySelector('#reviewStatus').innerHTML = `<div class="spinner"></div> ${window.i18n.t('printing')}`;
+  const wifiListSearch = document.querySelector('#wifi-list li');
+  if (wifiListSearch) {
+    wifiListSearch.innerHTML = `<div class="spinner"></div> ${await window.api.getTranslation('searching')}`;
   }
+
+  document.querySelector('#captureButton').textContent = await window.api.getTranslation('capture');
+  document.querySelector('.shortcut-hint').innerHTML = await window.api.getTranslation('pressSpaceToTake');
+
+  document.querySelector('#printButton').textContent = await window.api.getTranslation('print');
+  document.querySelectorAll('.shortcut-hint')[1].innerHTML = await window.api.getTranslation('pressEnterToPrint');
+
+  document.querySelector('#newPhotoButton').textContent = await window.api.getTranslation('newPhoto');
+  document.querySelectorAll('.shortcut-hint')[2].innerHTML = await window.api.getTranslation('pressSpaceForNew');
+
+  document.querySelector('#reviewStatus').innerHTML = `<div class="spinner"></div> ${await window.api.getTranslation('printing')}`;
 };
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', applyTranslations);
 } else {

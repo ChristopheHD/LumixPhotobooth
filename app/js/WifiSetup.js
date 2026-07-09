@@ -41,7 +41,7 @@ class WifiSetup {
     if (this.isConnecting || !this.isScanning) return;
 
     if (this.wifiList.children.length === 0) {
-      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${window.i18n ? window.i18n.t('searching') : 'Searching...'}</li>`;
+      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${await window.api.getTranslation('searching')}</li>`;
     }
 
     try {
@@ -54,7 +54,7 @@ class WifiSetup {
       if (this.isConnecting) return;
 
       if (networks.length === 0) {
-        this.wifiList.innerHTML = `<li>${window.i18n ? window.i18n.t('noNetwork') : 'No network found'}</li>`;
+        this.wifiList.innerHTML = `<li>${await window.api.getTranslation('noNetwork')}</li>`;
         return;
       }
 
@@ -85,7 +85,7 @@ class WifiSetup {
       if (this.isConnecting) return;
 
       console.error('Error during Wi-Fi scan:', error);
-      this.wifiError.textContent = window.i18n ? window.i18n.t('errorSearching') : 'Error searching for Wi-Fi networks.';
+      this.wifiError.textContent = await window.api.getTranslation('errorSearching');
       this.wifiError.classList.remove('hidden');
       this.wifiList.innerHTML = '';
     }
@@ -94,17 +94,17 @@ class WifiSetup {
   async connect(ssid) {
     this.isConnecting = true;
     this.stopScanning();
-    this.wifiList.innerHTML = `<li><div class="spinner"></div> ${window.i18n ? window.i18n.t('connecting', {ssid}) : 'Connecting to ' + ssid}</li>`;
+    this.wifiList.innerHTML = `<li><div class="spinner"></div> ${await window.api.getTranslation('connecting', {ssid})}</li>`;
     this.wifiError.classList.add('hidden');
 
     try {
       await window.api.wifiConnect(ssid);
       console.log(`Connected to ${ssid}. Waiting for camera...`);
-      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${window.i18n ? window.i18n.t('waitingForCamera') : 'Waiting for camera...'}</li>`;
+      this.wifiList.innerHTML = `<li><div class="spinner"></div> ${await window.api.getTranslation('waitingForCamera')}</li>`;
       this.waitForCamera();
     } catch (error) {
       console.error(`Connection error to ${ssid}:`, error);
-      this.wifiError.textContent = window.i18n ? window.i18n.t('connectionError', {ssid}) : `Connection error to ${ssid}. Please try again.`;
+      this.wifiError.textContent = await window.api.getTranslation('connectionError', {ssid});
       this.wifiError.classList.remove('hidden');
       this.isConnecting = false;
       this.startScanning();
@@ -127,7 +127,7 @@ class WifiSetup {
       } else {
         if (attempts >= maxAttempts) {
           console.error('Failed to reach camera after Wi-Fi connection.');
-          this.wifiError.textContent = window.i18n ? window.i18n.t('cameraUnreachable') : 'Wi-Fi connected successfully, but camera is unreachable.';
+          this.wifiError.textContent = await window.api.getTranslation('cameraUnreachable');
           this.wifiError.classList.remove('hidden');
           this.isConnecting = false;
           this.startScanning();

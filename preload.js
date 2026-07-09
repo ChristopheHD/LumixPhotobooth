@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('api', {
   cameraStartStream: () => ipcRenderer.invoke('camera-start-stream'),
 
   getConfig: () => ipcRenderer.invoke('get-config'),
+  getTranslation: (key, options) => ipcRenderer.invoke('get-translation', key, options),
 
   printImage: (filepath) => ipcRenderer.send('print-image', filepath),
 

@@ -1,5 +1,6 @@
 'use strict';
 
+const i18n = require('./i18n');
 class WifiSetup {
   constructor() {
     this.wifiScreen = document.getElementById('wifi-screen');

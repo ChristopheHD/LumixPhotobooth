@@ -1,10 +1,17 @@
 'use strict';
+require('./config');
+
+const fs = require('fs');
+const path = require('path');
+const { ipcRenderer } = require('electron');
+const Lumix = require('./Lumix');
 
 const previewImage = document.querySelector('#preview');
 const captureButton = document.querySelector('#captureButton');
 const countdownElement = document.querySelector('#countdown');
 const flashElement = document.querySelector('#flash');
 
+const i18n = require('./i18n');
 class Controller {
   constructor() {
     window.api.cameraInit();
@@ -114,7 +121,7 @@ class Controller {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
-    let count = 3;
+    let count = 5;
     if (this.captureButton) {
       this.captureButton.disabled = true;
       this.setButtonState(window.i18n ? window.i18n.t('preparing') : 'Preparing...', true);

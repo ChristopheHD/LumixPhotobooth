@@ -7,6 +7,7 @@ const Lumix = require('./Lumix');
 const fs = require('fs');
 const path = require('path');
 require('./config');
+const i18n = require('./i18n'); // Note: i18n is now correctly sourced
 
 class MainController {
   constructor(mainWindow) {
@@ -34,6 +35,7 @@ class MainController {
     ipcMain.removeHandler('camera-stop-stream');
     ipcMain.removeHandler('camera-start-stream');
     ipcMain.removeHandler('get-config');
+    ipcMain.removeHandler('get-translation');
 
     ipcMain.handle('wifi-check-initial', async () => {
       return new Promise((resolve) => {
@@ -55,12 +57,9 @@ class MainController {
             const uniqueNetworks = [];
             const ssids = new Set();
             for (const network of networks) {
-              let isSecure = false;
-              if (network.security) {
-                const securityLower = network.security.toLowerCase();
-                isSecure = securityLower !== 'none' && securityLower !== 'open' && network.security !== '';
-              }
-              if (network.ssid && !isSecure && !ssids.has(network.ssid)) {
+              // Bug fix: Do not filter out Lumix camera networks based on security type
+              // Lumix cameras might be reported with 'wpa' or 'wep' depending on the host driver setup.
+              if (network.ssid && !ssids.has(network.ssid)) {
                 ssids.add(network.ssid);
                 uniqueNetworks.push(network);
               }
@@ -154,6 +153,10 @@ class MainController {
         PRINT: global.PRINT,
         LANGUAGE: global.LANGUAGE
       };
+    });
+
+    ipcMain.handle('get-translation', (event, key, options) => {
+      return i18n.t(key, options);
     });
   }
 

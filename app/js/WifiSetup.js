@@ -1,6 +1,5 @@
 'use strict';
 
-const i18n = require('./i18n');
 class WifiSetup {
   constructor() {
     this.wifiScreen = document.getElementById('wifi-screen');
@@ -48,6 +47,7 @@ class WifiSetup {
     try {
       const networks = await window.api.wifiScan();
 
+      // Bolt optimization: Schedule next scan only AFTER current scan completes.
       if (this.isScanning && !this.isConnecting) {
         this.scanTimeout = setTimeout(() => this.scan(), 2000);
       }

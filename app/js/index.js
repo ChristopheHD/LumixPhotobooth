@@ -1,5 +1,3 @@
-(function() {
-require('./js/config');
 'use strict';
 
 const applyTranslations = async () => {
@@ -118,4 +116,3 @@ if (wifiScreenEl) {
 
 // Initial call
 updateCursorVisibility();
-})();

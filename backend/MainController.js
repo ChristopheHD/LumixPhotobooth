@@ -7,7 +7,6 @@ const Lumix = require('./Lumix');
 const fs = require('fs');
 const path = require('path');
 require('./config');
-const i18n = require('../app/js/i18n'); // Note: i18n is now correctly sourced
 
 class MainController {
   constructor(mainWindow) {
@@ -35,7 +34,6 @@ class MainController {
     ipcMain.removeHandler('camera-stop-stream');
     ipcMain.removeHandler('camera-start-stream');
     ipcMain.removeHandler('get-config');
-    ipcMain.removeHandler('get-translation');
 
     ipcMain.handle('wifi-check-initial', async () => {
       return new Promise((resolve) => {
@@ -156,10 +154,6 @@ class MainController {
         PRINT: global.PRINT,
         LANGUAGE: global.LANGUAGE
       };
-    });
-
-    ipcMain.handle('get-translation', (event, key, options) => {
-      return i18n.t(key, options);
     });
   }
 

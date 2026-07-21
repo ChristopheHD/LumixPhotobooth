@@ -94,24 +94,47 @@ ipcMain.on('print-image', (event, imagePath) => {
       return;
     }
 
-    printWindow.webContents.print({
-      silent: true,
-      printBackground: true,
-      deviceName: '', // Default printer
+    // Electron 43.0.0 on Linux has a bug where print() with options fails with "Invalid printer settings".
+    // As a workaround to guarantee silent printing, we use printToPDF and pipe it to lp.
+    printWindow.webContents.printToPDF({
       landscape: true,
-      margins: {
-        marginType: 'none'
-      }
-    }, (success, failureReason) => {
-      if (!success) {
-        console.error('Print failed:', failureReason);
-      } else {
-        console.log('Print job sent successfully.');
-      }
+      printBackground: true,
+      preferCSSPageSize: false,
+      pageSize: { width: 6, height: 4 }, // 15x10 cm equivalent in inches (landscape)
+      margins: { marginType: 'none', top: 0, bottom: 0, left: 0, right: 0 }
+    }).then(data => {
+      const fs = require('fs');
+      const os = require('os');
+      const tempPdfPath = path.join(os.tmpdir(), 'print_temp_' + Date.now() + '.pdf');
+
+      // Write the PDF
+      fs.promises.writeFile(tempPdfPath, data).then(() => {
+        const { exec } = require('child_process');
+        // Tell lp to completely fill the page without hardware margins
+        exec('lp -o fit-to-page -o media=Custom.10x15cm -o page-bottom=0 -o page-left=0 -o page-right=0 -o page-top=0 "' + tempPdfPath + '"', (error) => {
+           if (error) {
+             console.error('Print failed via lp:', error);
+             if (mainWindow) mainWindow.webContents.send('print-finished', false, error.message);
+           } else {
+             console.log('Print job sent successfully via lp.');
+             if (mainWindow) mainWindow.webContents.send('print-finished', true, null);
+           }
+           printWindow.close();
+           printWindow = null;
+           fs.unlink(tempPdfPath, () => {});
+        });
+      }).catch(err => {
+        console.error('Failed to write PDF:', err);
+        printWindow.close();
+        printWindow = null;
+        if (mainWindow) mainWindow.webContents.send('print-finished', false, err.message);
+      });
+    }).catch(error => {
+      console.error('PrintToPDF failed:', error);
       printWindow.close();
       printWindow = null;
       if (mainWindow) {
-        mainWindow.webContents.send('print-finished', success, failureReason);
+        mainWindow.webContents.send('print-finished', false, error.message);
       }
     });
   });

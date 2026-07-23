@@ -6,7 +6,7 @@ require('./config');
 
 
 const loadLocales = () => {
-  const localesPath = path.join(__dirname, '..', 'locales');
+  const localesPath = path.join(__dirname, '..', 'app', 'locales');
   const resources = {};
 
   if (fs.existsSync(localesPath)) {
@@ -34,7 +34,6 @@ i18next.init({
   lng: global.LANGUAGE || 'en',
   initImmediate: false,
   preload: [global.LANGUAGE || 'en'],
-  lng: global.LANGUAGE || 'en',
   fallbackLng: 'en',
   resources: loadLocales()
 });

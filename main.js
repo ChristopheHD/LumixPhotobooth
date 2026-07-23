@@ -4,6 +4,7 @@ const electron = require('electron');
 const path = require('path');
 const url = require('url');
 const { ipcMain } = require('electron');
+const MainController = require('./backend/MainController');
 
 // Module to control application life.
 const app = electron.app;
@@ -13,6 +14,7 @@ const BrowserWindow = electron.BrowserWindow;
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
+let mainController;
 
 function createWindow () {
 
@@ -23,10 +25,15 @@ function createWindow () {
     width: 1200,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
     }
   });
+
+  // Initialize main backend controller
+  mainController = new MainController(mainWindow);
+
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'app/index.html'),
@@ -48,7 +55,11 @@ function createWindow () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
+    if (mainController) {
+      mainController.cleanup();
+    }
     mainWindow = null;
+    mainController = null;
   });
 }
 

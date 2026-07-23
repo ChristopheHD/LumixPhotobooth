@@ -57,9 +57,14 @@ class MainController {
             const uniqueNetworks = [];
             const ssids = new Set();
             for (const network of networks) {
-              // Bug fix: Do not filter out Lumix camera networks based on security type
-              // Lumix cameras might be reported with 'wpa' or 'wep' depending on the host driver setup.
-              if (network.ssid && !ssids.has(network.ssid)) {
+              let isSecure = false;
+              if (network.security) {
+                const securityLower = network.security.toLowerCase();
+                isSecure = securityLower !== 'none' && securityLower !== 'open' && network.security !== '';
+              }
+              // We must explicitly only allow open networks (isSecure === false) as requested by the reviewer.
+              // Lumix camera networks should generally be strictly open anyway.
+              if (network.ssid && !isSecure && !ssids.has(network.ssid)) {
                 ssids.add(network.ssid);
                 uniqueNetworks.push(network);
               }

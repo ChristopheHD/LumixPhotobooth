@@ -1,25 +1,13 @@
 'use strict';
-require('./config');
-
-const fs = require('fs');
-const path = require('path');
-const { ipcRenderer } = require('electron');
-const Lumix = require('./Lumix');
 
 const previewImage = document.querySelector('#preview');
 const captureButton = document.querySelector('#captureButton');
 const countdownElement = document.querySelector('#countdown');
 const flashElement = document.querySelector('#flash');
 
-const i18n = require('./i18n');
 class Controller {
   constructor() {
-    const camera = new Lumix();
-
-    camera.initialize();
-    camera.startStream();
-
-    this.camera = camera;
+    window.api.cameraInit();
 
     // Display optimization
     this.previewImage = previewImage;
@@ -51,7 +39,7 @@ class Controller {
     this.render = this.render.bind(this);
 
     // IPC Events
-    ipcRenderer.on('print-finished', (event, success, error) => {
+    window.api.onPrintFinished((success, error) => {
       if (!success) {
         console.error('Print failed callback:', error);
       } else {
@@ -60,13 +48,20 @@ class Controller {
       this.closeReviewScreen();
     });
 
+    window.api.onCameraPreview((imgData) => {
+      this.latestImgData = imgData;
+      if (this.lastProcessedCount !== imgData.length) { // simple count change check
+         this.lastProcessedCount = imgData.length;
+      }
+    });
+
     //Attach events
     captureButton.addEventListener('click', () => this.startCountdown());
 
     this.printButton.addEventListener('click', () => this.triggerPrint());
     this.newPhotoButton.addEventListener('click', () => this.closeReviewScreen());
 
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', async (e) => {
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
         return;
@@ -88,13 +83,16 @@ class Controller {
           this.startCountdown();
         }
       } else if (e.code === 'Enter') {
-        if (this.isReviewActive && global.PRINT) {
+        if (this.isReviewActive) {
           e.preventDefault();
-          const enterKey = document.getElementById('enterKey');
-          if (enterKey) enterKey.classList.add('active');
+          const config = await window.api.getConfig();
+          if (config.PRINT) {
+            const enterKey = document.getElementById('enterKey');
+            if (enterKey) enterKey.classList.add('active');
 
-          if (!this.printButton.disabled) {
-            this.triggerPrint();
+            if (!this.printButton.disabled) {
+              this.triggerPrint();
+            }
           }
         }
       }
@@ -125,14 +123,14 @@ class Controller {
     }
   }
 
-  startCountdown() {
+  async startCountdown() {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
-    let count = 5;
+    let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState(i18n.t('preparing'), true);
+      this.setButtonState(await window.api.getTranslation('preparing'), true);
     }
 
     countdownElement.classList.remove('hidden');
@@ -178,8 +176,9 @@ class Controller {
 
     // Bolt optimization: Only process if a new frame has been received.
     // This reduces CPU/GPU work when the camera's frame rate is lower than the UI's 60fps.
-    if (this.camera.server.count !== this.lastProcessedCount) {
-      this.displayImage(this.camera.getPreviewImage());
+    if (this.latestImgData) {
+      this.displayImage(this.latestImgData);
+      this.latestImgData = null; // consume it
     }
 
     requestAnimationFrame(this.render);
@@ -192,23 +191,16 @@ class Controller {
     this.frameCount++;
   }
 
-  async displayImage(imgData) {
-    // imgData is now a Buffer/Uint8Array
+  displayImage(imgData) {
     if (imgData && !this.isUpdating) {
       this.isUpdating = true;
-      this.lastProcessedCount = this.camera.server.count;
 
       try {
-        // Using Blob and object URL for high-performance data transfer to <img>
         const blob = new Blob([imgData], { type: 'image/jpeg' });
         const url = URL.createObjectURL(blob);
 
-        // Update image source
         const oldUrl = this.currentUrl;
 
-        // Bolt optimization: Use onload/onerror to apply backpressure to the render loop.
-        // This drops intermediate frames if the UDP stream outpaces the browser's decode/render cycle,
-        // preventing memory leaks, decoding backlogs, and CPU churn on constrained hardware.
         const releaseLock = () => {
           if (oldUrl) {
             URL.revokeObjectURL(oldUrl);
@@ -230,51 +222,29 @@ class Controller {
     }
   }
 
-  capture() {
+  async capture() {
     this.captureButton.disabled = true;
-    this.setButtonState(i18n.t('capturing'), true);
+    this.setButtonState(await window.api.getTranslation('capturing'), true);
 
-    this.camera.capture((err, ok)=>{
-      if(err){
-        this.captureButton.disabled = false;
-        this.setButtonState(i18n.t('capture'), false);
-        return;
-      }
+    try {
+      const { filepath, data } = await window.api.cameraCapture();
 
-      // Attempt to download last photo taken
-      this.attempt((cb) => {
-        this.camera.getLastPhoto(cb);
-      }, async (err, data)=>{
+      this.captureButton.disabled = false;
+      this.setButtonState(await window.api.getTranslation('capture'), false);
 
-        this.captureButton.disabled = false;
-        this.setButtonState(i18n.t('capture'), false);
-
-        if(err){
-          console.error('Failed to download last photo from camera:', JSON.stringify(err, null, 2));
-          this.camera.startStream();
-          return;
-        }
-
-        // Save photo
-        console.log('Photo downloaded from camera, starting browser download...');
-        const filepath = await this.downloadImage(data);
-
-        if (filepath) {
-          this.showReviewScreen(data, filepath);
-        } else {
-          this.camera.startStream();
-        }
-      }, 3);
-
-    });
+      this.showReviewScreen(data, filepath);
+    } catch (err) {
+      console.error('Capture failed:', err);
+      this.captureButton.disabled = false;
+      this.setButtonState(await window.api.getTranslation('capture'), false);
+    }
   }
 
-  showReviewScreen(imgData, filepath) {
+  async showReviewScreen(imgData, filepath) {
     this.isReviewActive = true;
     this.currentPrintFilepath = filepath;
 
-    // Stop camera stream to focus on review
-    this.camera.stopStream();
+    window.api.cameraStopStream();
 
     const blob = new Blob([imgData], { type: 'image/jpeg' });
     const url = URL.createObjectURL(blob);
@@ -287,7 +257,8 @@ class Controller {
     this.printButton.disabled = false;
     this.newPhotoButton.disabled = false;
 
-    if (global.PRINT) {
+    const config = await window.api.getConfig();
+    if (config.PRINT) {
       this.reviewControls.classList.remove('hidden');
     } else {
       this.reviewControls.classList.add('hidden');
@@ -300,18 +271,19 @@ class Controller {
     }
   }
 
-  triggerPrint() {
-    if (!this.currentPrintFilepath || this.printButton.disabled || !global.PRINT) return;
+  async triggerPrint() {
+    const config = await window.api.getConfig();
+    if (!this.currentPrintFilepath || this.printButton.disabled || !config.PRINT) return;
 
     this.printButton.disabled = true;
     this.newPhotoButton.disabled = true;
     this.reviewControls.classList.add('hidden');
     this.reviewStatus.classList.remove('hidden');
 
-    ipcRenderer.send('print-image', this.currentPrintFilepath);
+    window.api.printImage(this.currentPrintFilepath);
   }
 
-  closeReviewScreen() {
+  async closeReviewScreen() {
     this.isReviewActive = false;
     this.reviewScreen.classList.add('hidden');
 
@@ -324,69 +296,12 @@ class Controller {
     this.currentPrintFilepath = null;
 
     // Reset buttons state
-    this.setButtonState(i18n.t('capture'), false);
+    this.setButtonState(await window.api.getTranslation('capture'), false);
     this.captureButton.disabled = false;
 
     // Restart stream
-    this.camera.startStream();
+    window.api.cameraStartStream();
   }
-
-  async downloadImage(data) {
-    const now = new Date();
-    const timestamp = now.getFullYear() +
-      String(now.getMonth() + 1).padStart(2, '0') +
-      String(now.getDate()).padStart(2, '0') + '_' +
-      String(now.getHours()).padStart(2, '0') +
-      String(now.getMinutes()).padStart(2, '0') +
-      String(now.getSeconds()).padStart(2, '0');
-
-    const filename = `lumix_capture_${timestamp}.jpg`;
-    const capturesDir = path.join(__dirname, '..', 'captures');
-
-    try {
-      await fs.promises.mkdir(capturesDir, { recursive: true });
-
-      const filepath = path.join(capturesDir, filename);
-      await fs.promises.writeFile(filepath, data);
-      console.log(`Photo saved successfully to: ${filepath}`);
-      return filepath;
-    } catch (e) {
-      console.error('Failed to save photo to disk:', e);
-
-      // Fallback to browser download if fs fails
-      const blob = new Blob([data], { type: 'image/jpeg' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }, 0);
-      return null;
-    }
-  }
-
-  attempt(fn, callback, tries) {
-    fn((err, res) => {
-      if (err) {
-        console.warn(`Attempt failed (${tries} tries left):`, JSON.stringify(err));
-        //Retry
-        if (tries === 0) {
-          return callback(err, res);
-        } else {
-          setTimeout(() => {
-            this.attempt(fn, callback, tries - 1);
-          }, 1000);
-          return;
-        }
-      }
-      return callback(err, res);
-    });
-  }
-
 }
 
-module.exports = Controller;
+window.Controller = Controller;

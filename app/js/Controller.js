@@ -13,6 +13,11 @@ class Controller {
     this.previewImage = previewImage;
     this.currentUrl = null;
     this.isUpdating = false;
+    this.lastProcessedCount = -1;
+
+    // Performance metrics
+    this.frameTimeSum = 0;
+    this.frameCount = 0;
 
     // Elements
     this.captureButton = document.getElementById('captureButton');
@@ -30,6 +35,9 @@ class Controller {
     this.currentPrintFilepath = null;
     this.isReviewActive = false;
 
+    // Bolt optimization: Bind render once to avoid per-frame allocation
+    this.render = this.render.bind(this);
+
     // IPC Events
     window.api.onPrintFinished((success, error) => {
       if (!success) {
@@ -41,7 +49,10 @@ class Controller {
     });
 
     window.api.onCameraPreview((imgData) => {
-      this.displayImage(imgData);
+      this.latestImgData = imgData;
+      if (this.lastProcessedCount !== imgData.length) { // simple count change check
+         this.lastProcessedCount = imgData.length;
+      }
     });
 
     //Attach events
@@ -98,6 +109,8 @@ class Controller {
         if (enterKey) enterKey.classList.remove('active');
       }
     });
+
+    this.render();
   }
 
   setButtonState(text, isLoading) {
@@ -110,14 +123,14 @@ class Controller {
     }
   }
 
-  startCountdown() {
+  async startCountdown() {
     if (this.isCountingDown || captureButton.disabled) return;
     this.isCountingDown = true;
 
     let count = 3;
     if (this.captureButton) {
       this.captureButton.disabled = true;
-      this.setButtonState(window.i18n ? window.i18n.t('preparing') : 'Preparing...', true);
+      this.setButtonState(await window.api.getTranslation('preparing'), true);
     }
 
     countdownElement.classList.remove('hidden');
@@ -158,6 +171,26 @@ class Controller {
     }
   }
 
+  render() {
+    const startTime = performance.now();
+
+    // Bolt optimization: Only process if a new frame has been received.
+    // This reduces CPU/GPU work when the camera's frame rate is lower than the UI's 60fps.
+    if (this.latestImgData) {
+      this.displayImage(this.latestImgData);
+      this.latestImgData = null; // consume it
+    }
+
+    requestAnimationFrame(this.render);
+
+    // Optional: Log performance periodically
+    if (this.frameCount > 0 && this.frameCount % 300 === 0) {
+      console.log(`Average UI render loop time: ${(this.frameTimeSum / this.frameCount).toFixed(2)}ms`);
+    }
+    this.frameTimeSum += (performance.now() - startTime);
+    this.frameCount++;
+  }
+
   displayImage(imgData) {
     if (imgData && !this.isUpdating) {
       this.isUpdating = true;
@@ -191,19 +224,19 @@ class Controller {
 
   async capture() {
     this.captureButton.disabled = true;
-    this.setButtonState(window.i18n ? window.i18n.t('capturing') : 'Capturing...', true);
+    this.setButtonState(await window.api.getTranslation('capturing'), true);
 
     try {
       const { filepath, data } = await window.api.cameraCapture();
 
       this.captureButton.disabled = false;
-      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+      this.setButtonState(await window.api.getTranslation('capture'), false);
 
       this.showReviewScreen(data, filepath);
     } catch (err) {
       console.error('Capture failed:', err);
       this.captureButton.disabled = false;
-      this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+      this.setButtonState(await window.api.getTranslation('capture'), false);
     }
   }
 
@@ -250,7 +283,7 @@ class Controller {
     window.api.printImage(this.currentPrintFilepath);
   }
 
-  closeReviewScreen() {
+  async closeReviewScreen() {
     this.isReviewActive = false;
     this.reviewScreen.classList.add('hidden');
 
@@ -263,7 +296,7 @@ class Controller {
     this.currentPrintFilepath = null;
 
     // Reset buttons state
-    this.setButtonState(window.i18n ? window.i18n.t('capture') : 'Capture', false);
+    this.setButtonState(await window.api.getTranslation('capture'), false);
     this.captureButton.disabled = false;
 
     // Restart stream

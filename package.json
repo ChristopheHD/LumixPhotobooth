@@ -32,7 +32,7 @@
     "autoprefixer": "^10.5.2",
     "electron": "^43.0.0",
     "eslint": "^10.6.0",
-    "globals": "^17.7.0",
+    "globals": "^17.8.0",
     "postcss": "^8.5.16",
     "postcss-cli": "^11.0.1",
     "postcss-sort-media-queries": "^6.6.2",

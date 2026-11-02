@@ -46,5 +46,10 @@
     "jquery": "^4.0.0",
     "node-wifi": "^2.0.16",
     "xml2js": "^0.6.2"
+  },
+  "overrides": {
+    "js-yaml": "3.15.2",
+    "json5": "1.0.2",
+    "minimatch": "11.0.1"
   }
 }

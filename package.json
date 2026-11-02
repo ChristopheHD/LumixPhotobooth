@@ -30,7 +30,7 @@
     "@electron/packager": "^20.0.1",
     "@eslint/js": "^10.0.1",
     "autoprefixer": "^10.5.2",
-    "electron": "^43.0.0",
+    "electron": "^43.8.1",
     "eslint": "^10.8.0",
     "globals": "^17.8.0",
     "postcss": "^8.5.25",
